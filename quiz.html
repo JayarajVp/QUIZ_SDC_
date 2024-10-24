@@ -172,10 +172,10 @@
             const selectedOption = document.querySelector('input[name="question"]:checked');
 
             if (selectedOption) {
-                // Extract the number from selected option (e.g., option1 -> 1)
+                // Extract the selected option number (e.g., option1 -> 1, option2 -> 2)
                 const selectedOptionNumber = selectedOption.value.replace('option', '');
 
-                // Compare the selected option number with the correct option number
+                // Compare the selected option number with the correct option number from the question
                 if (selectedOptionNumber === questions[currentQuestionIndex].correctOption) {
                     score++;  // Increment score if the answer is correct
                 }
@@ -192,7 +192,7 @@
         }
 
         // Calculate and save the quiz result
-        function calculateResult() {
+        async function calculateResult() {
             const totalTimeTaken = new Date(totalTime).toISOString().slice(11, -1); // Format as hh:mm:ss:ms
 
             // Collect student details from local storage
@@ -200,17 +200,24 @@
             const section = localStorage.getItem('section');
             const semester = localStorage.getItem('semester');
 
-            // Save result to Firebase
-            const resultRef = ref(db, 'results/' + username);
-            set(resultRef, {
-                username: username,
-                section: section,
-                semester: semester,
-                score: score,
-                totalTimeTaken: totalTimeTaken
-            }).then(() => {
-                alert(`Quiz submitted! Your score: ${score}. Total time taken: ${totalTimeTaken}`);
-            });
+            // Check if the username already exists
+            const existingResultRef = ref(db, 'results/' + username);
+            const snapshot = await get(existingResultRef);
+            
+            if (snapshot.exists()) {
+                alert("This username is already taken. Please enter a different name.");
+            } else {
+                // Save result to Firebase
+                set(existingResultRef, {
+                    username: username,
+                    section: section,
+                    semester: semester,
+                    score: score,
+                    totalTimeTaken: totalTimeTaken
+                }).then(() => {
+                    alert(`Quiz submitted! Your score: ${score}. Total time taken: ${totalTimeTaken}`);
+                });
+            }
         }
 
         // Event listener for "Next Question" button
