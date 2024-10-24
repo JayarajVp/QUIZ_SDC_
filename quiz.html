@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz</title>
     <script type="module">
-        // Import the necessary Firebase functions
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
@@ -19,98 +18,89 @@
             measurementId: "G-BPTGDJXS8K"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
         let questions = [];
         let currentQuestionIndex = 0;
         let score = 0;
         let timer;
-        let startTime;
+        let totalTime = 0;
 
         async function fetchQuestions() {
             const querySnapshot = await getDocs(collection(db, "questions"));
+            if (querySnapshot.empty) {
+                document.getElementById('quiz').innerHTML = "<h2>No questions available!</h2>";
+                return;
+            }
             querySnapshot.forEach(doc => {
                 questions.push(doc.data());
             });
-
-            // Shuffle questions
-            questions = questions.sort(() => Math.random() - 0.5);
+            questions = questions.sort(() => Math.random() - 0.5); // Shuffle questions
             startQuiz();
         }
 
         function startQuiz() {
-            if (questions.length > 0) {
-                displayQuestion();
-                startTime = new Date(); // Start the timer
-                timer = setInterval(updateTimer, 100); // Update timer every 100ms
-            } else {
-                alert("No questions available!");
-            }
+            document.getElementById('quiz').innerHTML = '';
+            currentQuestionIndex = 0;
+            score = 0;
+            totalTime = 0;
+            showQuestion();
         }
 
-        function displayQuestion() {
-            const questionContainer = document.getElementById('questionContainer');
+        function showQuestion() {
+            if (currentQuestionIndex >= questions.length) {
+                showResults();
+                return;
+            }
             const question = questions[currentQuestionIndex];
-            questionContainer.innerHTML = `
-                <h2>${question.question}</h2>
-                ${question.answers.map((answer, index) => `
-                    <div>
-                        <input type="radio" name="answer" id="answer${index}" value="${answer}" required>
-                        <label for="answer${index}">${answer}</label>
-                    </div>
-                `).join('')}
-                <button onclick="submitAnswer()">Submit Answer</button>
+            const questionElement = document.createElement('div');
+            questionElement.innerHTML = `
+                <h3>${question.question}</h3>
+                <ul>
+                    ${question.answers.map((answer, index) => `<li><button onclick="checkAnswer('${answer}')">${answer}</button></li>`).join('')}
+                </ul>
             `;
+            document.getElementById('quiz').appendChild(questionElement);
+            startTimer();
         }
 
-        function submitAnswer() {
-            const selectedAnswer = document.querySelector('input[name="answer"]:checked');
-            if (selectedAnswer) {
-                if (selectedAnswer.value === questions[currentQuestionIndex].correctAnswer) {
-                    score++;
-                }
-                currentQuestionIndex++;
-                if (currentQuestionIndex < questions.length) {
-                    displayQuestion();
-                } else {
-                    clearInterval(timer);
-                    showResults();
-                }
-            } else {
-                alert("Please select an answer!");
+        function checkAnswer(selectedAnswer) {
+            clearInterval(timer); // Stop the timer
+            const question = questions[currentQuestionIndex];
+            if (selectedAnswer === question.correctAnswer) {
+                score++;
             }
-        }
-
-        function updateTimer() {
-            const currentTime = new Date();
-            const elapsedTime = currentTime - startTime;
-            const totalSeconds = Math.floor(elapsedTime / 1000);
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            document.getElementById('totalTime').innerText = `Total time taken: ${minutes} minutes ${seconds} seconds`;
+            currentQuestionIndex++;
+            showQuestion();
         }
 
         function showResults() {
-            document.getElementById('quizContainer').style.display = 'none';
-            const resultsContainer = document.getElementById('resultsContainer');
-            resultsContainer.innerHTML = `
-                <h2>Results</h2>
-                <p>Score: ${score} out of ${questions.length}</p>
-                <p>${document.getElementById('totalTime').innerText}</p>
+            const totalTimeInSeconds = (totalTime / 1000).toFixed(2);
+            document.getElementById('quiz').innerHTML = `
+                <h2>Quiz Over!</h2>
+                <h3>Score: ${score} out of ${questions.length}</h3>
+                <h3>Total time taken: ${totalTimeInSeconds} seconds</h3>
             `;
         }
 
-        window.onload = fetchQuestions; // Fetch questions when the page loads
+        function startTimer() {
+            let timeLeft = 40000; // 40 seconds
+            timer = setInterval(() => {
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    checkAnswer(""); // Automatically move to the next question
+                } else {
+                    timeLeft -= 1000;
+                    totalTime += 1000;
+                }
+            }, 1000);
+        }
+
+        window.onload = fetchQuestions;
     </script>
 </head>
 <body>
-    <div id="quizContainer">
-        <h1>Welcome to the Quiz!</h1>
-        <div id="questionContainer"></div>
-        <p id="totalTime"></p>
-    </div>
-    <div id="resultsContainer"></div>
+    <h1>Welcome to the Quiz!</h1>
+    <div id="quiz"></div>
 </body>
 </html>
