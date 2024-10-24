@@ -169,8 +169,8 @@
             totalTime += questionEndTime - questionStartTime;
 
             const selectedOption = document.querySelector('input[name="question"]:checked');
-            if (selectedOption && selectedOption.value === questions[currentQuestionIndex].correctOption) { // Compare with correctOption
-                score++;
+            if (selectedOption && selectedOption.value === questions[currentQuestionIndex].correctOption) {
+                score++;  // Increment score if selected option is correct
             }
 
             currentQuestionIndex++;
