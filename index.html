@@ -28,10 +28,10 @@
         <script type="module">
             // Import Firebase SDKs
             import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-            import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+            import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
             import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 
-            // Firebase configuration (Replace with your credentials if needed)
+            // Firebase configuration (Your credentials)
             const firebaseConfig = {
                 apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
                 authDomain: "quiz-fb5d9.firebaseapp.com",
@@ -47,31 +47,33 @@
             const analytics = getAnalytics(app);
             const db = getDatabase(app); // Initialize Realtime Database
 
-            // Form submission event listener
+            // Event listener for form submission
             document.getElementById("submit").addEventListener('click', function(e) {
-                e.preventDefault(); // Prevents page reload
+                e.preventDefault(); // Prevent page reload
 
                 // Get input values
                 const username = document.getElementById("username").value;
                 const section = document.getElementById("section").value;
                 const semester = document.getElementById("semester").value;
 
-                // Data to be saved, including the result field with an initial value of 0
+                // Prepare data object
                 const userData = {
                     username: username,
                     section: section,
                     semester: semester,
-                    result: 0 // Initialize result field
+                    result: 0 // Include result field
                 };
 
-                // Save the data using update() to prevent overwriting
-                update(ref(db, 'user/' + username), userData)
+                console.log("Submitting Data:", userData); // Log data to ensure correctness
+
+                // Save data using set() to overwrite completely
+                set(ref(db, 'user/' + username), userData)
                     .then(() => {
-                        console.log("Data saved successfully:", userData); // Success confirmation
-                        alert("Submission Successful!"); // Notify user
+                        console.log("Data saved successfully:", userData); // Confirm success
+                        alert("Submission Successful!");
                     })
                     .catch((error) => {
-                        console.error("Error saving data:", error); // Handle any errors
+                        console.error("Error saving data:", error); // Log errors
                     });
             });
         </script>
