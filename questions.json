@@ -1,1 +1,17 @@
-[]
+[
+    {
+        "question": "What is the capital of France?",
+        "answers": ["Berlin", "Madrid", "Paris", "Rome"],
+        "correctAnswer": "Paris"
+    },
+    {
+        "question": "What is the largest planet in our solar system?",
+        "answers": ["Earth", "Mars", "Jupiter", "Saturn"],
+        "correctAnswer": "Jupiter"
+    },
+    {
+        "question": "Which element has the chemical symbol 'O'?",
+        "answers": ["Gold", "Oxygen", "Silver", "Iron"],
+        "correctAnswer": "Oxygen"
+    }
+]
