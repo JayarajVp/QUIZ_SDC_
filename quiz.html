@@ -168,9 +168,17 @@
             const questionEndTime = Date.now();
             totalTime += questionEndTime - questionStartTime;
 
+            // Get the selected option and check if it's correct
             const selectedOption = document.querySelector('input[name="question"]:checked');
-            if (selectedOption && selectedOption.value === questions[currentQuestionIndex].correctOption) {
-                score++;  // Increment score if selected option is correct
+
+            if (selectedOption) {
+                // Extract the number from selected option (e.g., option1 -> 1)
+                const selectedOptionNumber = selectedOption.value.replace('option', '');
+
+                // Compare the selected option number with the correct option number
+                if (selectedOptionNumber === questions[currentQuestionIndex].correctOption) {
+                    score++;  // Increment score if the answer is correct
+                }
             }
 
             currentQuestionIndex++;
