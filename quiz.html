@@ -6,7 +6,7 @@
     <title>Quiz</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
@@ -22,52 +22,119 @@
         const db = getFirestore(app);
 
         let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let startTime;
 
-        async function loadQuestions() {
+        async function getQuestions() {
             const querySnapshot = await getDocs(collection(db, "questions"));
             querySnapshot.forEach((doc) => {
-                questions.push(doc.data());
+                questions.push({ id: doc.id, ...doc.data() });
             });
+            questions = shuffle(questions); // Shuffle questions
+            startQuiz();
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
 
         function startQuiz() {
-            const name = document.getElementById("name").value;
-            if (!name) {
-                alert("Please enter your name");
-                return;
-            }
-            console.log("Starting quiz for: " + name);
-            document.getElementById("welcome").style.display = "none"; 
-            showQuestion(0); // Show the first question
+            document.getElementById("welcome").style.display = "none";
+            document.getElementById("quiz").style.display = "block";
+            startTime = new Date(); // Start timing
+            displayQuestion();
         }
 
-        let currentQuestionIndex = 0;
-
-        function showQuestion(index) {
-            if (index < questions.length) {
-                const questionElement = document.getElementById("question");
-                questionElement.textContent = questions[index].question; // Display question
-                currentQuestionIndex++;
+        function displayQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const question = questions[currentQuestionIndex];
+                document.getElementById("question").innerText = question.question;
+                document.getElementById("options").innerHTML = '';
+                question.answers.forEach((answer, index) => {
+                    document.getElementById("options").innerHTML += `
+                        <div>
+                            <input type="radio" name="answer" value="${answer}" required> ${answer}
+                        </div>`;
+                });
             } else {
-                alert("Quiz finished!");
-                // Here you can display final score or redirect
+                endQuiz();
             }
         }
 
-        document.addEventListener("DOMContentLoaded", async () => {
-            await loadQuestions();
-        });
+        function nextQuestion() {
+            const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+            if (selectedAnswer) {
+                if (selectedAnswer.value === questions[currentQuestionIndex].correctAnswer) {
+                    score++;
+                }
+                currentQuestionIndex++;
+                displayQuestion();
+            } else {
+                alert("Please select an answer!");
+            }
+        }
+
+        function endQuiz() {
+            const endTime = new Date();
+            const timeTaken = endTime - startTime; // Time in milliseconds
+            const minutes = Math.floor(timeTaken / 60000);
+            const seconds = Math.floor((timeTaken % 60000) / 1000);
+            const totalTime = `${minutes} min, ${seconds} sec`;
+
+            document.getElementById("quiz").style.display = "none";
+            document.getElementById("results").style.display = "block";
+            document.getElementById("score").innerText = `Score: ${score} out of ${questions.length}`;
+            document.getElementById("totalTime").innerText = `Total time taken: ${totalTime}`;
+
+            saveResults();
+        }
+
+        async function saveResults() {
+            const name = document.getElementById("name").value;
+            try {
+                await addDoc(collection(db, "Results"), {
+                    name: name,
+                    score: score,
+                    time: `${(new Date() - startTime)} ms`
+                });
+                console.log("Result saved successfully!");
+            } catch (e) {
+                console.error("Error saving result: ", e);
+            }
+        }
+
+        function startQuizWithName() {
+            const name = document.getElementById("name").value;
+            if (name) {
+                getQuestions();
+            } else {
+                alert("Please enter your name!");
+            }
+        }
     </script>
 </head>
 <body>
     <div id="welcome">
         <h1>Welcome to the Quiz!</h1>
         <input type="text" id="name" placeholder="Enter your name" required>
-        <button onclick="startQuiz()">Start Quiz</button>
+        <button onclick="startQuizWithName()">Start Quiz</button>
     </div>
+
     <div id="quiz" style="display: none;">
         <h2 id="question"></h2>
-        <!-- You can add options and buttons here later -->
+        <div id="options"></div>
+        <button onclick="nextQuestion()">Next</button>
+    </div>
+
+    <div id="results" style="display: none;">
+        <h2>Results</h2>
+        <p id="score"></p>
+        <p id="totalTime"></p>
     </div>
 </body>
 </html>
