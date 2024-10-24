@@ -6,18 +6,18 @@
     <body>
         <div class="box">
             <div class="form">
-                <h2>SDC Quiz</h2> <!-- Form title updated -->
+                <h2>SDC Quiz</h2> <!-- Form title -->
                 <form>
                     <div class="inputbox">
                         <input type="text" value="" id="username" required>
                         <span>Username</span>
                     </div>
                     <div class="inputbox">
-                        <input type="text" value="" id="section" required> <!-- Email replaced with Section -->
+                        <input type="text" value="" id="section" required> <!-- Section field -->
                         <span>Section</span>
                     </div>
                     <div class="inputbox">
-                        <input type="text" value="" id="semester" required> <!-- Phone replaced with Semester -->
+                        <input type="text" value="" id="semester" required> <!-- Semester field -->
                         <span>Semester</span>
                     </div>
                     <input type="submit" value="Submit" class="sub" id="submit">
@@ -28,10 +28,10 @@
         <script type="module">
             // Import Firebase SDKs
             import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-            import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+            import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
             import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 
-            // Firebase configuration from your code
+            // Firebase configuration (Replace with your credentials if needed)
             const firebaseConfig = {
                 apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
                 authDomain: "quiz-fb5d9.firebaseapp.com",
@@ -45,25 +45,34 @@
             // Initialize Firebase
             const app = initializeApp(firebaseConfig);
             const analytics = getAnalytics(app);
-            const db = getDatabase(app); // Initialize database
+            const db = getDatabase(app); // Initialize Realtime Database
 
-            // Event listener for form submission
+            // Form submission event listener
             document.getElementById("submit").addEventListener('click', function(e) {
                 e.preventDefault(); // Prevents page reload
 
+                // Get input values
                 const username = document.getElementById("username").value;
                 const section = document.getElementById("section").value;
                 const semester = document.getElementById("semester").value;
 
-                // Save data to Firebase Realtime Database
-                set(ref(db, 'user/' + username), {
+                // Data to be saved, including the result field with an initial value of 0
+                const userData = {
                     username: username,
                     section: section,
                     semester: semester,
-                    result: 0 // Initialize result field with 0
-                });
+                    result: 0 // Initialize result field
+                };
 
-                alert("Submission Successful!"); // Alert the user on success
+                // Save the data using update() to prevent overwriting
+                update(ref(db, 'user/' + username), userData)
+                    .then(() => {
+                        console.log("Data saved successfully:", userData); // Success confirmation
+                        alert("Submission Successful!"); // Notify user
+                    })
+                    .catch((error) => {
+                        console.error("Error saving data:", error); // Handle any errors
+                    });
             });
         </script>
     </body>
