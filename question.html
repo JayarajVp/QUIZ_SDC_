@@ -4,26 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Questions</title>
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDPIA6AaCVO1sjcZACFup1C5Eqre8FHTVU",
-            authDomain: "quizsdc-da4c7.firebaseapp.com",
-            projectId: "quizsdc-da4c7",
-            storageBucket: "quizsdc-da4c7.appspot.com",
-            messagingSenderId: "926753843209",
-            appId: "1:926753843209:web:3cb8f6ec9611c585bf30d8",
-            measurementId: "G-THZY5FZHMZ"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
+    <script>
         async function addQuestion() {
             const question = document.getElementById('question').value;
             const answers = [...document.querySelectorAll('input[name="answer"]')].map(input => input.value);
@@ -35,27 +16,52 @@
                 correctAnswer
             };
 
+            // Load existing questions
+            let existingQuestions = [];
             try {
-                const docRef = await addDoc(collection(db, "questions"), questionData);
-                console.log("Question added with ID: ", docRef.id);
+                const response = await fetch('questions.json');
+                existingQuestions = await response.json();
             } catch (e) {
-                console.error("Error adding question: ", e);
+                console.error("Error loading questions:", e);
             }
+
+            // Add new question to the array
+            existingQuestions.push(questionData);
+
+            // Save updated questions back to questions.json
+            const blob = new Blob([JSON.stringify(existingQuestions, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'questions.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         async function clearQuestions() {
-            const querySnapshot = await getDocs(collection(db, "questions"));
-            querySnapshot.forEach(async (docSnapshot) => {
-                await deleteDoc(doc(db, "questions", docSnapshot.id));
-            });
+            const emptyQuestions = [];
+            const blob = new Blob([JSON.stringify(emptyQuestions, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'questions.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
             console.log("All questions cleared");
         }
 
         async function clearResults() {
-            const querySnapshot = await getDocs(collection(db, "results"));
-            querySnapshot.forEach(async (docSnapshot) => {
-                await deleteDoc(doc(db, "results", docSnapshot.id));
-            });
+            const emptyResults = [];
+            const blob = new Blob([JSON.stringify(emptyResults, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'results.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
             console.log("All results cleared");
         }
     </script>
