@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Firebase Quiz Form</title>
     <link rel="stylesheet" href="style.css">
     <style>
@@ -10,38 +12,38 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background-image: url('https://pin.it/4Q8kkZcKX '); 
-            background-size: cover; 
-            background-position: center; 
+            background-image: url('your-background-image-url.jpg'); /* Background image */
+            background-size: cover; /* Cover the entire viewport */
+            background-position: center; /* Center the background */
         }
         .box {
-            background: rgba(255, 255, 255, 0.8); 
+            background: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); 
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Subtle shadow effect */
         }
         .form {
             display: flex;
             flex-direction: column;
-            align-items: center; 
+            align-items: center; /* Center form elements */
         }
         .inputbox {
-            margin-bottom: 15px;
+            margin-bottom: 15px; /* Space between input fields */
             width: 100%;
         }
         .inputbox input {
-            width: 100%; 
+            width: 100%; /* Full width of the input */
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 5px;
         }
         .inputbox span {
             display: block;
-            margin-bottom: 5px; 
+            margin-bottom: 5px; /* Space above the label */
             font-weight: bold;
         }
         .sub {
-            background: #28a745; 
+            background: #28a745; /* Green button */
             color: white;
             border: none;
             padding: 10px 20px;
@@ -49,7 +51,7 @@
             cursor: pointer;
         }
         .sub:hover {
-            background: #218838; 
+            background: #218838; /* Darker green on hover */
         }
     </style>
 </head>
@@ -57,17 +59,17 @@
     <div class="box">
         <div class="form">
             <h2>SDC Quiz</h2> <!-- Form title -->
-            <form>
+            <form id="quizForm">
                 <div class="inputbox">
-                    <input type="text" value="" id="username" required>
+                    <input type="text" id="username" required>
                     <span>Username</span>
                 </div>
                 <div class="inputbox">
-                    <input type="text" value="" id="section" required> <!-- Section field -->
+                    <input type="text" id="section" required> <!-- Section field -->
                     <span>Section</span>
                 </div>
                 <div class="inputbox">
-                    <input type="text" value="" id="semester" required> <!-- Semester field -->
+                    <input type="text" id="semester" required> <!-- Semester field -->
                     <span>Semester</span>
                 </div>
                 <input type="submit" value="Submit" class="sub" id="submit">
@@ -81,7 +83,7 @@
         import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 
-        // Firebase configuration 
+        // Firebase configuration (Your credentials)
         const firebaseConfig = {
             apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
             authDomain: "quiz-fb5d9.firebaseapp.com",
@@ -92,21 +94,21 @@
             measurementId: "G-BPTGDJXS8K"
         };
 
-       
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
-        const db = getDatabase(app); 
+        const db = getDatabase(app); // Initialize Realtime Database
 
-        
-        document.getElementById("submit").addEventListener('click', function(e) {
-            e.preventDefault(); 
+        // Event listener for form submission
+        document.getElementById("quizForm").addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent page reload
 
-           
+            // Get input values
             const username = document.getElementById("username").value;
             const section = document.getElementById("section").value;
             const semester = document.getElementById("semester").value;
 
-            
+            // Prepare data object
             const userData = {
                 username: username,
                 section: section,
@@ -114,16 +116,24 @@
                 result: 0 // Include result field
             };
 
-            console.log("Submitting Data:", userData); 
+            console.log("Submitting Data:", userData); // Log data to ensure correctness
 
-           
-            set(ref(db, 'user/' + username), userData)
+            // Save data using set() to overwrite completely
+            set(ref(db, 'user/' + username.replace(/\s+/g, '_')), userData)
                 .then(() => {
-                    console.log("Data saved successfully:", userData); 
-                    alert("Submission Successful!");
+                    console.log("Data saved successfully:", userData); // Confirm success
+                    alert("Submission Successful! Redirecting to quiz...");
+
+                    // Store data in localStorage for use in quiz.html
+                    localStorage.setItem("username", username);
+                    localStorage.setItem("section", section);
+                    localStorage.setItem("semester", semester);
+
+                    // Redirect to quiz.html
+                    window.location.href = 'quiz.html';
                 })
                 .catch((error) => {
-                    console.error("Error saving data:", error); 
+                    console.error("Error saving data:", error); // Log errors
                 });
         });
     </script>
