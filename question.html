@@ -7,7 +7,7 @@
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -42,6 +42,22 @@
                 console.error("Error adding question: ", e);
             }
         }
+
+        async function clearQuestions() {
+            const querySnapshot = await getDocs(collection(db, "questions"));
+            querySnapshot.forEach(async (docSnapshot) => {
+                await deleteDoc(doc(db, "questions", docSnapshot.id));
+            });
+            console.log("All questions cleared");
+        }
+
+        async function clearResults() {
+            const querySnapshot = await getDocs(collection(db, "results"));
+            querySnapshot.forEach(async (docSnapshot) => {
+                await deleteDoc(doc(db, "results", docSnapshot.id));
+            });
+            console.log("All results cleared");
+        }
     </script>
 </head>
 <body>
@@ -56,5 +72,7 @@
     <input type="radio" name="correct" value="Answer 3"> Correct Answer 3
     <input type="radio" name="correct" value="Answer 4"> Correct Answer 4
     <button onclick="addQuestion()">Add Question</button>
+    <button onclick="clearQuestions()">Clear All Questions</button>
+    <button onclick="clearResults()">Clear All Results</button>
 </body>
 </html>
