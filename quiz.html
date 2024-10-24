@@ -92,6 +92,7 @@
         let score = 0;
         let totalTime = 0; // Time taken in seconds
         let timer;
+        let timeLimit = 40; // Time limit for each question in seconds
 
         // Fetch questions from Firebase
         function loadQuestions() {
@@ -121,11 +122,8 @@
                     optionsDiv.appendChild(optionDiv);
                 }
 
-                // Start timer if it's the first question
-                if (currentQuestionIndex === 0) {
-                    startTimer();
-                }
-
+                // Start timer
+                startTimer();
                 // Show quiz container
                 document.getElementById("quizContainer").style.display = "block";
             } else {
@@ -135,7 +133,7 @@
 
         // Start timer
         function startTimer() {
-            totalTime = 40; // Reset timer to 40 seconds
+            totalTime = timeLimit; // Reset timer to 40 seconds
             document.getElementById("timeLeft").innerText = totalTime;
 
             clearInterval(timer);
@@ -184,7 +182,7 @@
             const resultRef = ref(db, 'results/' + username);
             set(resultRef, {
                 score: score,
-                timeTaken: totalTime
+                timeTaken: timeLimit * questions.length - totalTime // Total time taken for all questions
             }).then(() => {
                 console.log("Results saved successfully!");
             }).catch((error) => {
