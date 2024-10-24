@@ -13,7 +13,7 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            background-image: url('your-image-url.jpg'); /* Background image */
+            background-image: url('your-background-image-url.jpg'); /* Background image */
             background-size: cover; /* Cover the entire viewport */
             background-position: center; /* Center the background */
             color: white; /* Text color */
@@ -49,6 +49,10 @@
         .next-btn:hover {
             background: #218838; /* Darker green on hover */
         }
+        #result {
+            display: none; /* Hide result by default */
+            margin-top: 20px; /* Space above result */
+        }
     </style>
 </head>
 <body>
@@ -57,14 +61,14 @@
         <div class="question" id="question"></div>
         <div id="options"></div>
         <button class="next-btn" id="nextButton">Next</button>
-        <div id="result" style="display: none;"></div>
+        <div id="result"></div>
     </div>
     <div id="loading">Loading questions...</div>
 
     <script type="module">
         // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
         // Firebase configuration (Your credentials)
         const firebaseConfig = {
@@ -81,16 +85,17 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app); // Initialize Realtime Database
 
-        // Retrieve user data from localStorage (or any other way you choose)
-        const username = localStorage.getItem("username"); // Assuming you store username in local storage
+        // Retrieve user data from localStorage
+        const username = localStorage.getItem("username").replace(/\s+/g, '_'); // Sanitize username
         const section = localStorage.getItem("section");
         const semester = localStorage.getItem("semester");
 
         let questions = [];
         let currentQuestionIndex = 0;
         let score = 0;
-        let timer;
         let totalTime = 0; // Time taken in seconds
+        let questionTime = 0; // Time taken for current question
+        let timer;
 
         // Fetch questions from Firebase
         onValue(ref(db, 'questions/'), (snapshot) => {
@@ -133,8 +138,10 @@
             let timeLeft = 40; // 40 seconds for each question
             document.getElementById("timeLeft").innerText = timeLeft;
 
+            questionTime = 0; // Reset question time for new question
             timer = setInterval(() => {
                 timeLeft--;
+                questionTime++;
                 totalTime++;
 
                 if (timeLeft <= 0) {
@@ -160,8 +167,48 @@
             }
 
             currentQuestionIndex++;
-            loadQuestion();
+
+            // Display score and time after every 2 questions
+            if (currentQuestionIndex % 2 === 0) {
+                displayScoreAndTime();
+            } else {
+                loadQuestion();
+            }
         });
+
+        // Display score and time taken
+        function displayScoreAndTime() {
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+            const milliseconds = (questionTime * 1000) % 1000; // Get milliseconds for current question
+
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `
+                <h2>Progress Update!</h2>
+                <p>Current score: ${score} out of ${currentQuestionIndex}</p>
+                <p>Time taken for this round: ${minutes} min ${seconds} sec ${milliseconds} ms</p>
+            `;
+            resultDiv.style.display = "block";
+
+            // Update user result in database after every two questions
+            const userData = {
+                result: score,
+                time: totalTime // Store total time taken
+            };
+            set(ref(db, 'user/' + username), userData)
+                .then(() => console.log("User score updated successfully"))
+                .catch((error) => console.error("Error updating user score:", error));
+            
+            // Hide options and question after displaying score
+            document.getElementById("options").innerHTML = '';
+            document.getElementById("question").innerText = '';
+
+            // Wait for a moment before loading the next question
+            setTimeout(() => {
+                resultDiv.style.display = "none"; // Hide result
+                loadQuestion();
+            }, 3000); // Wait for 3 seconds before loading next question
+        }
 
         // Finish Quiz
         function finishQuiz() {
@@ -173,19 +220,19 @@
 
             resultDiv.innerHTML = `
                 <h2>Quiz Finished!</h2>
-                <p>Your score: ${score} out of ${questions.length}</p>
+                <p>Your final score: ${score} out of ${questions.length}</p>
                 <p>Total time taken: ${minutes} min ${seconds} sec</p>
             `;
             resultDiv.style.display = "block";
 
             // Update user result in database
-            const userData = {
-                result: score
+            const finalUserData = {
+                result: score,
+                time: totalTime // Store total time taken
             };
-            const usernameKey = username.replace(/\s+/g, '_');
-            set(ref(db, 'user/' + usernameKey), userData)
-                .then(() => console.log("User score updated successfully"))
-                .catch((error) => console.error("Error updating user score:", error));
+            set(ref(db, 'user/' + username), finalUserData)
+                .then(() => console.log("Final user score updated successfully"))
+                .catch((error) => console.error("Error updating final user score:", error));
         }
     </script>
 </body>
