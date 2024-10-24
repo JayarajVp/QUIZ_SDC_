@@ -8,7 +8,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
             authDomain: "quiz-fb5d9.firebaseapp.com",
@@ -19,40 +18,27 @@
             measurementId: "G-BPTGDJXS8K"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
         let questions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let startTime;
-        let totalTime;
-
+        
         async function fetchQuestions() {
             const querySnapshot = await getDocs(collection(db, "quizData"));
             querySnapshot.forEach((doc) => {
                 questions.push({ id: doc.id, ...doc.data() });
             });
-            shuffleQuestions();
-            console.log('Questions fetched:', questions); // Debugging statement
-            displayQuestion();
-        }
-
-        function shuffleQuestions() {
-            for (let i = questions.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [questions[i], questions[j]] = [questions[j], questions[i]];
-            }
+            console.log('Questions fetched:', questions);
         }
 
         function startQuiz() {
             const name = document.getElementById('name').value;
+            console.log('Starting quiz for:', name);
             if (name) {
-                console.log('Starting quiz for:', name); // Debugging statement
+                alert('Starting quiz!'); // Confirm quiz start
+                // Hide name input and show quiz section
                 document.getElementById('nameInput').style.display = 'none';
-                document.getElementById('quiz').style.display = 'block'; // Show quiz section
-                startTime = performance.now(); // Start timing
+                document.getElementById('quiz').style.display = 'block';
                 displayQuestion();
             } else {
                 alert("Please enter your name!");
@@ -60,46 +46,13 @@
         }
 
         function displayQuestion() {
-            if (currentQuestionIndex < questions.length) {
-                const questionData = questions[currentQuestionIndex];
-                document.getElementById('question').innerText = questionData.question;
-                const answersContainer = document.getElementById('answers');
-                answersContainer.innerHTML = '';
-
-                questionData.answers.forEach((answer) => {
-                    const button = document.createElement('button');
-                    button.innerText = answer;
-                    button.onclick = () => selectAnswer(answer);
-                    answersContainer.appendChild(button);
-                });
-            } else {
-                endQuiz();
-            }
+            console.log('Displaying question...');
+            // Display first question logic here (add later)
         }
 
-        function selectAnswer(selectedAnswer) {
-            const questionData = questions[currentQuestionIndex];
-            if (selectedAnswer === questionData.correctAnswer) {
-                score++;
-            }
-            currentQuestionIndex++;
-            displayQuestion();
-        }
-
-        function endQuiz() {
-            totalTime = performance.now() - startTime; // Calculate time taken in milliseconds
-            const seconds = Math.floor(totalTime / 1000);
-            const minutes = Math.floor(seconds / 60);
-            const milliseconds = Math.round(totalTime % 1000);
-            
-            document.getElementById('quiz').innerHTML = `
-                <h1>Quiz Completed!</h1>
-                <p>Score: ${score} out of ${questions.length}</p>
-                <p>Total time taken: ${minutes} minutes, ${seconds % 60} seconds, ${milliseconds} milliseconds</p>
-            `;
-        }
-
-        window.onload = fetchQuestions;
+        window.onload = async function() {
+            await fetchQuestions();
+        };
     </script>
 </head>
 <body>
