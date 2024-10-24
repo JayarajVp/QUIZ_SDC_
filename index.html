@@ -1,81 +1,131 @@
+<!DOCTYPE html>
 <html>
-    <head>
-        <title>Firebase Quiz Form</title>
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-        <div class="box">
-            <div class="form">
-                <h2>SDC Quiz</h2> <!-- Form title -->
-                <form>
-                    <div class="inputbox">
-                        <input type="text" value="" id="username" required>
-                        <span>Username</span>
-                    </div>
-                    <div class="inputbox">
-                        <input type="text" value="" id="section" required> <!-- Section field -->
-                        <span>Section</span>
-                    </div>
-                    <div class="inputbox">
-                        <input type="text" value="" id="semester" required> <!-- Semester field -->
-                        <span>Semester</span>
-                    </div>
-                    <input type="submit" value="Submit" class="sub" id="submit">
-                </form>
-            </div>
+<head>
+    <title>Firebase Quiz Form</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('https://pin.it/4Q8kkZcKX '); 
+            background-size: cover; 
+            background-position: center; 
+        }
+        .box {
+            background: rgba(255, 255, 255, 0.8); 
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); 
+        }
+        .form {
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+        }
+        .inputbox {
+            margin-bottom: 15px;
+            width: 100%;
+        }
+        .inputbox input {
+            width: 100%; 
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .inputbox span {
+            display: block;
+            margin-bottom: 5px; 
+            font-weight: bold;
+        }
+        .sub {
+            background: #28a745; 
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .sub:hover {
+            background: #218838; 
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="form">
+            <h2>SDC Quiz</h2> <!-- Form title -->
+            <form>
+                <div class="inputbox">
+                    <input type="text" value="" id="username" required>
+                    <span>Username</span>
+                </div>
+                <div class="inputbox">
+                    <input type="text" value="" id="section" required> <!-- Section field -->
+                    <span>Section</span>
+                </div>
+                <div class="inputbox">
+                    <input type="text" value="" id="semester" required> <!-- Semester field -->
+                    <span>Semester</span>
+                </div>
+                <input type="submit" value="Submit" class="sub" id="submit">
+            </form>
         </div>
+    </div>
 
-        <script type="module">
-            // Import Firebase SDKs
-            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-            import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-            import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 
-            // Firebase configuration (Your credentials)
-            const firebaseConfig = {
-                apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
-                authDomain: "quiz-fb5d9.firebaseapp.com",
-                projectId: "quiz-fb5d9",
-                storageBucket: "quiz-fb5d9.appspot.com",
-                messagingSenderId: "916039221761",
-                appId: "1:916039221761:web:df2104737062375b3ff600",
-                measurementId: "G-BPTGDJXS8K"
+        // Firebase configuration 
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
+            authDomain: "quiz-fb5d9.firebaseapp.com",
+            projectId: "quiz-fb5d9",
+            storageBucket: "quiz-fb5d9.appspot.com",
+            messagingSenderId: "916039221761",
+            appId: "1:916039221761:web:df2104737062375b3ff600",
+            measurementId: "G-BPTGDJXS8K"
+        };
+
+       
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getDatabase(app); 
+
+        
+        document.getElementById("submit").addEventListener('click', function(e) {
+            e.preventDefault(); 
+
+           
+            const username = document.getElementById("username").value;
+            const section = document.getElementById("section").value;
+            const semester = document.getElementById("semester").value;
+
+            
+            const userData = {
+                username: username,
+                section: section,
+                semester: semester,
+                result: 0 // Include result field
             };
 
-            // Initialize Firebase
-            const app = initializeApp(firebaseConfig);
-            const analytics = getAnalytics(app);
-            const db = getDatabase(app); // Initialize Realtime Database
+            console.log("Submitting Data:", userData); 
 
-            // Event listener for form submission
-            document.getElementById("submit").addEventListener('click', function(e) {
-                e.preventDefault(); // Prevent page reload
-
-                // Get input values
-                const username = document.getElementById("username").value;
-                const section = document.getElementById("section").value;
-                const semester = document.getElementById("semester").value;
-
-                // Prepare data object
-                const userData = {
-                    username: username,
-                    section: section,
-                    semester: semester,
-                    result: 0 // Include result field
-                };
-
-                console.log("Submitting Data:", userData); // Log data to ensure correctness
-
-                // Save data using set() to overwrite completely
-                set(ref(db, 'user/' + username), userData)
-                    .then(() => {
-                        console.log("Data saved successfully:", userData); // Confirm success
-                        alert("Submission Successful!");
-                    })
-                    .catch((error) => {
-                        console.error("Error saving data:", error); // Log errors
-                    });
-            });
-        </script>
-    </body>
+           
+            set(ref(db, 'user/' + username), userData)
+                .then(() => {
+                    console.log("Data saved successfully:", userData); 
+                    alert("Submission Successful!");
+                })
+                .catch((error) => {
+                    console.error("Error saving data:", error); 
+                });
+        });
+    </script>
+</body>
 </html>
