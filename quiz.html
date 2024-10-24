@@ -26,7 +26,8 @@
         let questions = [];
         let currentQuestionIndex = 0;
         let score = 0;
-        let totalTime = 0;
+        let startTime;
+        let totalTime;
 
         async function fetchQuestions() {
             const querySnapshot = await getDocs(collection(db, "quizData"));
@@ -41,6 +42,17 @@
             for (let i = questions.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+        }
+
+        function startQuiz() {
+            const name = document.getElementById('name').value;
+            if (name) {
+                document.getElementById('nameInput').style.display = 'none';
+                startTime = performance.now(); // Start timing
+                displayQuestion();
+            } else {
+                alert("Please enter your name!");
             }
         }
 
@@ -72,10 +84,15 @@
         }
 
         function endQuiz() {
+            totalTime = performance.now() - startTime; // Calculate time taken in milliseconds
+            const seconds = Math.floor(totalTime / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const milliseconds = Math.round(totalTime % 1000);
+            
             document.getElementById('quiz').innerHTML = `
                 <h1>Quiz Completed!</h1>
                 <p>Score: ${score} out of ${questions.length}</p>
-                <p>Total time taken: ${totalTime} seconds</p>
+                <p>Total time taken: ${minutes} minutes, ${seconds % 60} seconds, ${milliseconds} milliseconds</p>
             `;
         }
 
@@ -83,8 +100,12 @@
     </script>
 </head>
 <body>
-    <div id="quiz">
+    <div id="nameInput">
         <h1>Welcome to the Quiz!</h1>
+        <input type="text" id="name" placeholder="Enter your name" required>
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+    <div id="quiz" style="display: none;">
         <div id="question"></div>
         <div id="answers"></div>
     </div>
