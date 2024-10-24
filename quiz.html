@@ -40,6 +40,11 @@
             margin-bottom: 10px;
             font-size: 16px;
         }
+        .timer {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: red;
+        }
         .sub {
             width: 100%;
             padding: 10px;
@@ -59,7 +64,9 @@
     <div class="box">
         <h2>SDC Quiz</h2>
         <div id="quiz-container"></div>
-        <button id="submitQuiz" class="sub">Submit Quiz</button>
+        <div class="timer" id="timer">Time Left: 40s</div>
+        <button id="nextQuestion" class="sub">Next Question</button>
+        <button id="submitQuiz" class="sub" style="display: none;">Submit Quiz</button>
     </div>
 
     <script type="module">
@@ -82,62 +89,105 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Get quiz questions from the database
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+        let totalTime = 0; // total time in milliseconds
+        let questionStartTime; // to track time per question
+
+        // Load quiz questions from the database
         async function loadQuestions() {
             const dbRef = ref(db);
             const snapshot = await get(child(dbRef, 'questions'));
             if (snapshot.exists()) {
-                const questions = Object.values(snapshot.val());
-
+                questions = Object.values(snapshot.val());
                 // Shuffle the questions
-                const shuffledQuestions = questions.sort(() => Math.random() - 0.5);
-                displayQuestions(shuffledQuestions);
+                questions.sort(() => Math.random() - 0.5);
+                displayQuestion();
             } else {
                 console.log("No questions found in database");
             }
         }
 
-        // Display the shuffled questions on the page
-        function displayQuestions(questions) {
+        // Display the current question
+        function displayQuestion() {
             const quizContainer = document.getElementById('quiz-container');
-            questions.forEach((q, index) => {
-                const questionBox = document.createElement('div');
-                questionBox.classList.add('question-box');
+            quizContainer.innerHTML = ''; // Clear previous question
 
-                const questionText = `<span>${index + 1}. ${q.question}</span>`;
-                let optionsHTML = '';
-                for (let [key, option] of Object.entries(q.options)) {
-                    optionsHTML += `
-                        <label>
-                            <input type="radio" name="question${index}" value="${key}">
-                            ${option}
-                        </label>
-                    `;
-                }
+            const question = questions[currentQuestionIndex];
+            const questionBox = document.createElement('div');
+            questionBox.classList.add('question-box');
 
-                questionBox.innerHTML = `
-                    ${questionText}
-                    <div class="options">
-                        ${optionsHTML}
-                    </div>
+            const questionText = `<span>${currentQuestionIndex + 1}. ${question.question}</span>`;
+            let optionsHTML = '';
+            for (let [key, option] of Object.entries(question.options)) {
+                optionsHTML += `
+                    <label>
+                        <input type="radio" name="question" value="${key}">
+                        ${option}
+                    </label>
                 `;
+            }
 
-                quizContainer.appendChild(questionBox);
-            });
+            questionBox.innerHTML = `
+                ${questionText}
+                <div class="options">
+                    ${optionsHTML}
+                </div>
+            `;
+
+            quizContainer.appendChild(questionBox);
+            startTimer();
+        }
+
+        // Start 40-second timer for each question
+        function startTimer() {
+            let timeLeft = 40;
+            const timerDisplay = document.getElementById('timer');
+            timerDisplay.textContent = `Time Left: ${timeLeft}s`;
+
+            questionStartTime = Date.now(); // Start the question timer
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Time Left: ${timeLeft}s`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    handleNextQuestion();
+                }
+            }, 1000);
+        }
+
+        // Handle "Next Question" or automatic transition after time out
+        function handleNextQuestion() {
+            clearInterval(timer);
+
+            // Calculate time taken for this question
+            const questionEndTime = Date.now();
+            totalTime += questionEndTime - questionStartTime;
+
+            const selectedOption = document.querySelector('input[name="question"]:checked');
+            if (selectedOption && selectedOption.value === "option1") { // Assuming "option1" is the correct answer in the data
+                score++;
+            }
+
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                displayQuestion();
+            } else {
+                document.getElementById('nextQuestion').style.display = 'none';
+                document.getElementById('submitQuiz').style.display = 'block';
+            }
         }
 
         // Calculate and save the quiz result
-        function calculateResult(questions) {
-            let score = 0;
+        function calculateResult() {
+            const totalTimeTaken = new Date(totalTime).toISOString().slice(11, -1); // Format as hh:mm:ss:ms
 
-            questions.forEach((q, index) => {
-                const selectedOption = document.querySelector(`input[name="question${index}"]:checked`);
-                if (selectedOption && selectedOption.value === "option1") { // Correct option comparison
-                    score++;
-                }
-            });
-
-            // Collect student details from previous page (index.html)
+            // Collect student details from local storage
             const username = localStorage.getItem('username');
             const section = localStorage.getItem('section');
             const semester = localStorage.getItem('semester');
@@ -148,23 +198,24 @@
                 username: username,
                 section: section,
                 semester: semester,
-                score: score
+                score: score,
+                totalTimeTaken: totalTimeTaken
             }).then(() => {
-                alert(`Quiz submitted! Your score: ${score}`);
+                alert(`Quiz submitted! Your score: ${score}. Total time taken: ${totalTimeTaken}`);
             });
         }
 
-        // Event listener for quiz submission
-        document.getElementById('submitQuiz').addEventListener('click', async () => {
-            const dbRef = ref(db);
-            const snapshot = await get(child(dbRef, 'questions'));
-            if (snapshot.exists()) {
-                const questions = Object.values(snapshot.val());
-                calculateResult(questions);
-            }
+        // Event listener for "Next Question" button
+        document.getElementById('nextQuestion').addEventListener('click', () => {
+            handleNextQuestion();
         });
 
-        // Load questions on page load
+        // Event listener for "Submit Quiz" button
+        document.getElementById('submitQuiz').addEventListener('click', () => {
+            calculateResult();
+        });
+
+        // Load questions when the page loads
         window.onload = loadQuestions;
     </script>
 </body>
