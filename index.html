@@ -13,21 +13,21 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            background-image: url('your-background-image-url.jpg');
-            background-size: cover;
-            background-position: center;
-            color: white;
+            background-image: url('your-background-image-url.jpg'); /* Background image */
+            background-size: cover; /* Cover the entire viewport */
+            background-position: center; /* Center the background */
+            color: white; /* Text color */
         }
         .box {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.7); /* Semi-transparent background for readability */
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-            width: 80%;
-            max-width: 600px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Subtle shadow effect */
+            width: 80%; /* Set a width for the container */
+            max-width: 600px; /* Maximum width */
         }
         .inputbox {
-            margin-bottom: 20px;
+            margin-bottom: 20px; /* Space between input boxes */
         }
         input[type="text"], .sub {
             width: 100%;
@@ -59,7 +59,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getDatabase } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
@@ -76,15 +76,28 @@
 
         document.getElementById("userInfoForm").addEventListener('submit', function(e) {
             e.preventDefault();
+
             const username = document.getElementById("username").value.replace(/\s+/g, '_');
             const section = document.getElementById("section").value;
             const semester = document.getElementById("semester").value;
 
-            localStorage.setItem("username", username);
-            localStorage.setItem("section", section);
-            localStorage.setItem("semester", semester);
+            // Save user info to Firebase Realtime Database
+            const userId = username; // Use username as unique identifier
+            set(ref(db, 'users/' + userId), {
+                section: section,
+                semester: semester
+            }).then(() => {
+                console.log('User info saved successfully!');
+                // Store user info in localStorage
+                localStorage.setItem("username", username);
+                localStorage.setItem("section", section);
+                localStorage.setItem("semester", semester);
 
-            window.location.href = "quiz.html";
+                // Redirect to quiz.html
+                window.location.href = "quiz.html";
+            }).catch((error) => {
+                console.error('Error saving user info: ', error);
+            });
         });
     </script>
 </body>
