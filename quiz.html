@@ -1,31 +1,73 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz</title>
-    <link rel="stylesheet" href="style.css">
+    <title>SDC Quiz</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f7f7f7;
+        }
+        .box {
+            width: 600px;
+            padding: 40px;
+            background: white;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .question-box {
+            margin-bottom: 20px;
+        }
+        .question-box span {
+            font-size: 18px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            margin-top: 10px;
+        }
+        .options label {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .sub {
+            width: 100%;
+            padding: 10px;
+            background: #333;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.3s;
+        }
+        .sub:hover {
+            background: #555;
+        }
+    </style>
 </head>
 <body>
-    <div class="quiz-container">
-        <h2 id="timer">Time Left: 40s</h2>
-        <div id="question-container">
-            <h3 id="question"></h3>
-            <div id="options"></div>
-        </div>
-        <button id="next-button" disabled>Next</button>
-        <div id="result" style="display: none;">
-            <h2>Quiz Finished!</h2>
-            <p id="score"></p>
-            <p id="total-time"></p>
-        </div>
+    <div class="box">
+        <h2>SDC Quiz</h2>
+        <div id="quiz-container"></div>
+        <button id="submitQuiz" class="sub">Submit Quiz</button>
     </div>
 
     <script type="module">
+        // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getDatabase, ref, get, child, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-        // Firebase configuration
+        // Firebase configuration from your code
         const firebaseConfig = {
             apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
             authDomain: "quiz-fb5d9.firebaseapp.com",
@@ -40,115 +82,90 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // Initialize quiz variables
-        let questions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let timer;
-        const timePerQuestion = 40; // 40 seconds for each question
-        let totalTime = 0;
+        // Get quiz questions from the database
+        async function loadQuestions() {
+            const dbRef = ref(db);
+            const snapshot = await get(child(dbRef, 'questions'));
+            if (snapshot.exists()) {
+                const questions = Object.values(snapshot.val());
 
-        // Get username from localStorage
-        const username = localStorage.getItem("username");
+                // Shuffle the questions
+                const shuffledQuestions = questions.sort(() => Math.random() - 0.5);
+                displayQuestions(shuffledQuestions);
+            } else {
+                console.log("No questions found in database");
+            }
+        }
 
-        // Load questions from Firebase
-        function loadQuestions() {
-            const questionsRef = ref(db, 'questions/');
-            onValue(questionsRef, (snapshot) => {
-                questions = Object.values(snapshot.val());
-                startQuiz();
+        // Display the shuffled questions on the page
+        function displayQuestions(questions) {
+            const quizContainer = document.getElementById('quiz-container');
+            questions.forEach((q, index) => {
+                const questionBox = document.createElement('div');
+                questionBox.classList.add('question-box');
+
+                const questionText = `<span>${index + 1}. ${q.question}</span>`;
+                let optionsHTML = '';
+                for (let [key, option] of Object.entries(q.options)) {
+                    optionsHTML += `
+                        <label>
+                            <input type="radio" name="question${index}" value="${key}">
+                            ${option}
+                        </label>
+                    `;
+                }
+
+                questionBox.innerHTML = `
+                    ${questionText}
+                    <div class="options">
+                        ${optionsHTML}
+                    </div>
+                `;
+
+                quizContainer.appendChild(questionBox);
             });
         }
 
-        // Start the quiz
-        function startQuiz() {
-            currentQuestionIndex = 0;
-            score = 0;
-            totalTime = 0;
-            document.getElementById('result').style.display = 'none';
-            document.getElementById('next-button').disabled = false;
-            loadQuestion();
-        }
+        // Calculate and save the quiz result
+        function calculateResult(questions) {
+            let score = 0;
 
-        // Load the current question
-        function loadQuestion() {
-            if (currentQuestionIndex < questions.length) {
-                const questionData = questions[currentQuestionIndex];
-                document.getElementById('question').innerText = questionData.question;
-
-                // Display options
-                const optionsContainer = document.getElementById('options');
-                optionsContainer.innerHTML = ''; // Clear previous options
-                Object.values(questionData.options).forEach((option, index) => {
-                    const button = document.createElement('button');
-                    button.innerText = option;
-                    button.classList.add('option-button');
-                    button.addEventListener('click', () => selectAnswer(option, questionData.correctOption));
-                    optionsContainer.appendChild(button);
-                });
-
-                // Start timer
-                startTimer(timePerQuestion);
-            } else {
-                finishQuiz();
-            }
-        }
-
-        // Handle answer selection
-        function selectAnswer(selectedOption, correctOption) {
-            clearInterval(timer); // Stop the timer
-            if (selectedOption === correctOption) {
-                score++;
-            }
-            totalTime += timePerQuestion; // Add to total time
-            currentQuestionIndex++;
-            loadQuestion();
-        }
-
-        // Start timer for each question
-        function startTimer(seconds) {
-            let timeLeft = seconds;
-            document.getElementById('timer').innerText = `Time Left: ${timeLeft}s`;
-
-            timer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer').innerText = `Time Left: ${timeLeft}s`;
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    totalTime += seconds; // Add time to total
-                    currentQuestionIndex++;
-                    loadQuestion(); // Move to the next question
+            questions.forEach((q, index) => {
+                const selectedOption = document.querySelector(`input[name="question${index}"]:checked`);
+                if (selectedOption && selectedOption.value === "option1") { // Correct option comparison
+                    score++;
                 }
-            }, 1000);
-        }
+            });
 
-        // Finish quiz and display results
-        function finishQuiz() {
-            document.getElementById('question-container').style.display = 'none';
-            document.getElementById('next-button').style.display = 'none';
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('score').innerText = `Your final score: ${score} out of ${questions.length}`;
-            document.getElementById('total-time').innerText = `Total Time Taken: ${totalTime} seconds`;
+            // Collect student details from previous page (index.html)
+            const username = localStorage.getItem('username');
+            const section = localStorage.getItem('section');
+            const semester = localStorage.getItem('semester');
 
-            // Store result in database
-            storeResult();
-        }
-
-        // Store result in Firebase
-        function storeResult() {
-            const resultData = {
+            // Save result to Firebase
+            const resultRef = ref(db, 'results/' + username);
+            set(resultRef, {
                 username: username,
-                score: score,
-                totalTime: totalTime
-            };
-            const userRef = ref(db, 'user/' + username);
-            userRef.update({ result: resultData })
-                .then(() => console.log("Result saved successfully"))
-                .catch((error) => console.error("Error saving result:", error));
+                section: section,
+                semester: semester,
+                score: score
+            }).then(() => {
+                alert(`Quiz submitted! Your score: ${score}`);
+            });
         }
 
-        // Start loading questions
-        loadQuestions();
+        // Event listener for quiz submission
+        document.getElementById('submitQuiz').addEventListener('click', async () => {
+            const dbRef = ref(db);
+            const snapshot = await get(child(dbRef, 'questions'));
+            if (snapshot.exists()) {
+                const questions = Object.values(snapshot.val());
+                calculateResult(questions);
+            }
+        });
+
+        // Load questions on page load
+        window.onload = loadQuestions;
     </script>
 </body>
 </html>
