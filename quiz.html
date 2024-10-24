@@ -4,114 +4,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #quiz-container { display: none; }
+        #result-container { display: none; }
+    </style>
+</head>
+<body>
+    <h1>Welcome to the Quiz!</h1>
+    <div id="name-container">
+        <input type="text" id="student-name" placeholder="Enter your name" required>
+        <button id="start-quiz">Start Quiz</button>
+    </div>
+    
+    <div id="quiz-container">
+        <h2 id="question"></h2>
+        <div id="answers"></div>
+        <button id="next-button">Next Question</button>
+        <p id="timer"></p>
+    </div>
+    
+    <div id="result-container">
+        <h2>Results</h2>
+        <p id="result"></p>
+        <p id="total-time"></p>
+    </div>
+
     <script>
         let questions = [];
         let currentQuestionIndex = 0;
         let score = 0;
-        let timer;
-        let totalTime = 0;
-        let studentName = "";
+        let startTime;
 
-        // Load questions from questions.json
-        async function loadQuestions() {
-            const response = await fetch('questions.json');
-            questions = await response.json();
-            questions.sort(() => Math.random() - 0.5); // Shuffle questions
+        // Fetch questions from the JSON file
+        fetch('questions.json')
+            .then(response => response.json())
+            .then(data => {
+                questions = data;
+            })
+            .catch(error => console.error('Error loading questions:', error));
 
-            // Prompt for the user's name at the beginning
-            studentName = prompt("Please enter your name:");
-            displayQuestion();
+        document.getElementById('start-quiz').onclick = function() {
+            const name = document.getElementById('student-name').value;
+            if (!name) {
+                alert('Please enter your name to start the quiz.');
+                return;
+            }
+            document.getElementById('name-container').style.display = 'none';
+            document.getElementById('quiz-container').style.display = 'block';
+            startQuiz();
+        };
+
+        function startQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            startTime = new Date().getTime();
+            showQuestion();
         }
 
-        function displayQuestion() {
+        function showQuestion() {
             if (currentQuestionIndex < questions.length) {
                 const question = questions[currentQuestionIndex];
-                document.getElementById('question').textContent = question.question;
+                document.getElementById('question').innerText = question.question;
                 const answersContainer = document.getElementById('answers');
                 answersContainer.innerHTML = '';
 
                 question.answers.forEach((answer, index) => {
-                    const button = document.createElement('button');
-                    button.textContent = answer;
-                    button.onclick = () => checkAnswer(answer);
-                    answersContainer.appendChild(button);
+                    const answerButton = document.createElement('button');
+                    answerButton.innerText = answer;
+                    answerButton.onclick = function() {
+                        if (answer === question.correctAnswer) {
+                            score++;
+                        }
+                        currentQuestionIndex++;
+                        showQuestion();
+                    };
+                    answersContainer.appendChild(answerButton);
                 });
 
-                startTimer();
+                // Start the timer for each question
+                startTimer(40);
             } else {
-                displayResults();
+                endQuiz();
             }
         }
 
-        function checkAnswer(selectedAnswer) {
-            clearTimeout(timer);
-            if (selectedAnswer === questions[currentQuestionIndex].correctAnswer) {
-                score++;
-            }
-            currentQuestionIndex++;
-            displayQuestion();
-        }
+        function startTimer(duration) {
+            let timer = duration, minutes, seconds;
+            const timerDisplay = document.getElementById('timer');
 
-        function startTimer() {
-            let timeLeft = 40;
-            document.getElementById('timer').textContent = `Time left: ${timeLeft}s`;
-            timer = setInterval(() => {
-                timeLeft--;
-                document.getElementById('timer').textContent = `Time left: ${timeLeft}s`;
-                totalTime += 1000;
+            const interval = setInterval(() => {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+                timerDisplay.innerText = `Time left: ${seconds} seconds`;
 
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    checkAnswer(null); // Move to next question
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    currentQuestionIndex++;
+                    showQuestion();
                 }
             }, 1000);
         }
 
-        function displayResults() {
-            const result = {
-                name: studentName,
-                score: score,
-                totalTime: totalTime / 1000 // Convert to seconds
-            };
-
-            // Display results
-            document.body.innerHTML = `
-                <h1>Quiz Completed!</h1>
-                <p>Name: ${result.name}</p>
-                <p>Your Score: ${result.score} / ${questions.length}</p>
-                <p>Total Time: ${result.totalTime} seconds</p>
-            `;
-
-            // Call a function to save results
-            saveResult(result);
+        function endQuiz() {
+            const endTime = new Date().getTime();
+            const totalTime = endTime - startTime;
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('result-container').style.display = 'block';
+            document.getElementById('result').innerText = `Score: ${score} out of ${questions.length}`;
+            document.getElementById('total-time').innerText = `Total time taken: ${Math.floor(totalTime / 1000)} seconds`;
         }
-
-        async function saveResult(result) {
-            // Fetch existing results
-            const response = await fetch('results.json');
-            const results = await response.json();
-
-            // Add the new result
-            results.push(result);
-
-            // Save back to results.json
-            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'results.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        window.onload = loadQuestions;
     </script>
-</head>
-<body>
-    <h1>Quiz</h1>
-    <div id="timer"></div>
-    <h2 id="question"></h2>
-    <div id="answers"></div>
 </body>
 </html>
