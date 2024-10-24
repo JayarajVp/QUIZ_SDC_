@@ -22,48 +22,52 @@
         const db = getFirestore(app);
 
         let questions = [];
-        
-        async function fetchQuestions() {
-            const querySnapshot = await getDocs(collection(db, "quizData"));
+
+        async function loadQuestions() {
+            const querySnapshot = await getDocs(collection(db, "questions"));
             querySnapshot.forEach((doc) => {
-                questions.push({ id: doc.id, ...doc.data() });
+                questions.push(doc.data());
             });
-            console.log('Questions fetched:', questions);
         }
 
         function startQuiz() {
-            const name = document.getElementById('name').value;
-            console.log('Starting quiz for:', name);
-            if (name) {
-                alert('Starting quiz!'); // Confirm quiz start
-                // Hide name input and show quiz section
-                document.getElementById('nameInput').style.display = 'none';
-                document.getElementById('quiz').style.display = 'block';
-                displayQuestion();
+            const name = document.getElementById("name").value;
+            if (!name) {
+                alert("Please enter your name");
+                return;
+            }
+            console.log("Starting quiz for: " + name);
+            document.getElementById("welcome").style.display = "none"; 
+            showQuestion(0); // Show the first question
+        }
+
+        let currentQuestionIndex = 0;
+
+        function showQuestion(index) {
+            if (index < questions.length) {
+                const questionElement = document.getElementById("question");
+                questionElement.textContent = questions[index].question; // Display question
+                currentQuestionIndex++;
             } else {
-                alert("Please enter your name!");
+                alert("Quiz finished!");
+                // Here you can display final score or redirect
             }
         }
 
-        function displayQuestion() {
-            console.log('Displaying question...');
-            // Display first question logic here (add later)
-        }
-
-        window.onload = async function() {
-            await fetchQuestions();
-        };
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadQuestions();
+        });
     </script>
 </head>
 <body>
-    <div id="nameInput">
+    <div id="welcome">
         <h1>Welcome to the Quiz!</h1>
         <input type="text" id="name" placeholder="Enter your name" required>
         <button onclick="startQuiz()">Start Quiz</button>
     </div>
     <div id="quiz" style="display: none;">
-        <div id="question"></div>
-        <div id="answers"></div>
+        <h2 id="question"></h2>
+        <!-- You can add options and buttons here later -->
     </div>
 </body>
 </html>
