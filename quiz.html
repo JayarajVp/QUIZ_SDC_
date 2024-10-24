@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Page</title>
+    <title>Quiz</title>
     <link rel="stylesheet" href="style.css">
     <style>
         body {
@@ -25,6 +25,7 @@
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Subtle shadow effect */
             width: 80%; /* Set a width for the container */
             max-width: 600px; /* Maximum width */
+            display: none; /* Hide quiz container by default */
         }
         #timer {
             font-size: 24px;
@@ -56,13 +57,14 @@
     </style>
 </head>
 <body>
-    <div class="quiz-container" id="quizContainer" style="display: none;">
+    <div class="quiz-container" id="quizContainer">
         <div id="timer">Time Left: <span id="timeLeft">40</span>s</div>
         <div class="question" id="question"></div>
         <div id="options"></div>
         <button class="next-btn" id="nextButton">Next</button>
         <div id="result"></div>
     </div>
+
     <div id="loading">Loading questions...</div>
 
     <script type="module">
@@ -85,34 +87,29 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app); // Initialize Realtime Database
 
-        // Retrieve user data from localStorage
-        const username = localStorage.getItem("username").replace(/\s+/g, '_'); // Sanitize username
-        const section = localStorage.getItem("section");
-        const semester = localStorage.getItem("semester");
-
         let questions = [];
         let currentQuestionIndex = 0;
         let score = 0;
         let totalTime = 0; // Time taken in seconds
-        let questionTime = 0; // Time taken for current question
         let timer;
 
         // Fetch questions from Firebase
-        onValue(ref(db, 'questions/'), (snapshot) => {
-            questions = snapshot.val();
-            const questionKeys = Object.keys(questions);
-            questions = questionKeys.sort(() => Math.random() - 0.5).map(key => questions[key]); // Shuffle questions
-            loadQuestion();
-        }, {
-            onlyOnce: true
-        });
+        function loadQuestions() {
+            onValue(ref(db, 'questions/'), (snapshot) => {
+                questions = snapshot.val();
+                const questionKeys = Object.keys(questions);
+                questions = questionKeys.sort(() => Math.random() - 0.5).map(key => questions[key]); // Shuffle questions
+                loadQuestion();
+            }, {
+                onlyOnce: true
+            });
+        }
 
         // Load question
         function loadQuestion() {
             if (currentQuestionIndex < questions.length) {
                 const questionData = questions[currentQuestionIndex];
                 document.getElementById("loading").style.display = "none";
-                document.getElementById("quizContainer").style.display = "block";
                 document.getElementById("question").innerText = questionData.question;
 
                 const optionsDiv = document.getElementById("options");
@@ -120,38 +117,32 @@
                 for (const [key, value] of Object.entries(questionData.options)) {
                     const optionDiv = document.createElement("div");
                     optionDiv.className = "option";
-                    optionDiv.innerHTML = `
-                        <input type="radio" name="option" id="${key}" value="${key}">
-                        <label for="${key}">${value}</label>
-                    `;
+                    optionDiv.innerHTML = `<input type="radio" name="option" value="${value}"> ${value}`;
                     optionsDiv.appendChild(optionDiv);
                 }
 
-                startTimer();
+                // Start timer
+                totalTime = 40; // Reset timer to 40 seconds
+                document.getElementById("timeLeft").innerText = totalTime;
+
+                clearInterval(timer);
+                timer = setInterval(() => {
+                    totalTime--;
+                    document.getElementById("timeLeft").innerText = totalTime;
+
+                    if (totalTime <= 0) {
+                        clearInterval(timer);
+                        alert("Time's up! Moving to the next question.");
+                        currentQuestionIndex++;
+                        loadQuestion(); // Load next question
+                    }
+                }, 1000);
+
+                // Show quiz container
+                document.getElementById("quizContainer").style.display = "block";
             } else {
                 finishQuiz();
             }
-        }
-
-        // Start timer
-        function startTimer() {
-            let timeLeft = 40; // 40 seconds for each question
-            document.getElementById("timeLeft").innerText = timeLeft;
-
-            questionTime = 0; // Reset question time for new question
-            timer = setInterval(() => {
-                timeLeft--;
-                questionTime++;
-                totalTime++;
-
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    alert("Time's up! Moving to the next question.");
-                    currentQuestionIndex++;
-                    loadQuestion();
-                }
-                document.getElementById("timeLeft").innerText = timeLeft;
-            }, 1000);
         }
 
         // Handle Next Question
@@ -167,73 +158,35 @@
             }
 
             currentQuestionIndex++;
-
-            // Display score and time after every 2 questions
-            if (currentQuestionIndex % 2 === 0) {
-                displayScoreAndTime();
-            } else {
-                loadQuestion();
-            }
+            loadQuestion();
         });
 
-        // Display score and time taken
-        function displayScoreAndTime() {
-            const minutes = Math.floor(totalTime / 60);
-            const seconds = totalTime % 60;
-            const milliseconds = (questionTime * 1000) % 1000; // Get milliseconds for current question
-
-            const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `
-                <h2>Progress Update!</h2>
-                <p>Current score: ${score} out of ${currentQuestionIndex}</p>
-                <p>Time taken for this round: ${minutes} min ${seconds} sec ${milliseconds} ms</p>
-            `;
-            resultDiv.style.display = "block";
-
-            // Update user result in database after every two questions
-            const userData = {
-                result: score,
-                time: totalTime // Store total time taken
-            };
-            set(ref(db, 'user/' + username), userData)
-                .then(() => console.log("User score updated successfully"))
-                .catch((error) => console.error("Error updating user score:", error));
-            
-            // Hide options and question after displaying score
-            document.getElementById("options").innerHTML = '';
-            document.getElementById("question").innerText = '';
-
-            // Wait for a moment before loading the next question
-            setTimeout(() => {
-                resultDiv.style.display = "none"; // Hide result
-                loadQuestion();
-            }, 3000); // Wait for 3 seconds before loading next question
-        }
-
-        // Finish Quiz
+        // Finish quiz
         function finishQuiz() {
             clearInterval(timer);
-            document.getElementById("quizContainer").style.display = "none";
-            const resultDiv = document.getElementById("result");
-            const minutes = Math.floor(totalTime / 60);
-            const seconds = totalTime % 60;
-
-            resultDiv.innerHTML = `
-                <h2>Quiz Finished!</h2>
-                <p>Your final score: ${score} out of ${questions.length}</p>
-                <p>Total time taken: ${minutes} min ${seconds} sec</p>
+            const finalResultDiv = document.getElementById("result");
+            finalResultDiv.innerHTML = `
+                <h3>Quiz Finished!</h3>
+                <h3>Your final score: ${score} out of ${questions.length}</h3>
+                <p>Total Time Taken: ${totalTime} seconds</p>
             `;
-            resultDiv.style.display = "block";
+            finalResultDiv.style.display = "block";
 
-            // Update user result in database
-            const finalUserData = {
-                result: score,
-                time: totalTime // Store total time taken
-            };
-            set(ref(db, 'user/' + username), finalUserData)
-                .then(() => console.log("Final user score updated successfully"))
-                .catch((error) => console.error("Error updating final user score:", error));
+            // Store result in database
+            const username = localStorage.getItem("username");
+            const resultRef = ref(db, 'results/' + username);
+            set(resultRef, {
+                score: score,
+                timeTaken: totalTime
+            }).then(() => {
+                console.log("Results saved successfully!");
+            }).catch((error) => {
+                console.error("Error saving results: ", error);
+            });
         }
+
+        // Start loading questions
+        loadQuestions();
     </script>
 </body>
 </html>
