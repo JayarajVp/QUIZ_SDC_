@@ -114,35 +114,42 @@
 
                 const optionsDiv = document.getElementById("options");
                 optionsDiv.innerHTML = ""; // Clear previous options
-                for (const [key, value] of Object.entries(questionData.options)) {
+                for (const value of questionData.options) {
                     const optionDiv = document.createElement("div");
                     optionDiv.className = "option";
                     optionDiv.innerHTML = `<input type="radio" name="option" value="${value}"> ${value}`;
                     optionsDiv.appendChild(optionDiv);
                 }
 
-                // Start timer
-                totalTime = 40; // Reset timer to 40 seconds
-                document.getElementById("timeLeft").innerText = totalTime;
-
-                clearInterval(timer);
-                timer = setInterval(() => {
-                    totalTime--;
-                    document.getElementById("timeLeft").innerText = totalTime;
-
-                    if (totalTime <= 0) {
-                        clearInterval(timer);
-                        alert("Time's up! Moving to the next question.");
-                        currentQuestionIndex++;
-                        loadQuestion(); // Load next question
-                    }
-                }, 1000);
+                // Start timer if it's the first question
+                if (currentQuestionIndex === 0) {
+                    startTimer();
+                }
 
                 // Show quiz container
                 document.getElementById("quizContainer").style.display = "block";
             } else {
                 finishQuiz();
             }
+        }
+
+        // Start timer
+        function startTimer() {
+            totalTime = 40; // Reset timer to 40 seconds
+            document.getElementById("timeLeft").innerText = totalTime;
+
+            clearInterval(timer);
+            timer = setInterval(() => {
+                totalTime--;
+                document.getElementById("timeLeft").innerText = totalTime;
+
+                if (totalTime <= 0) {
+                    clearInterval(timer);
+                    alert("Time's up! Moving to the next question.");
+                    currentQuestionIndex++;
+                    loadQuestion(); // Load next question
+                }
+            }, 1000);
         }
 
         // Handle Next Question
