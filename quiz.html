@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz</title>
     <style>
-        /* Simple styles for the quiz */
         body { font-family: Arial, sans-serif; }
         .question { font-weight: bold; }
         .answers button { display: block; margin: 5px 0; }
@@ -30,7 +29,26 @@
         <button id="start-quiz">Start Quiz</button>
     </div>
 
-    <script>
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        // Your Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
+            authDomain: "quiz-fb5d9.firebaseapp.com",
+            projectId: "quiz-fb5d9",
+            storageBucket: "quiz-fb5d9.appspot.com",
+            messagingSenderId: "916039221761",
+            appId: "1:916039221761:web:df2104737062375b3ff600",
+            measurementId: "G-BPTGDJXS8K"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
         let questions = [];
         let currentQuestionIndex = 0;
         let score = 0;
@@ -51,9 +69,8 @@
 
         async function loadQuestions() {
             try {
-                const response = await fetch('questions.json');
-                if (!response.ok) throw new Error('Network response was not ok');
-                questions = await response.json();
+                const querySnapshot = await getDocs(collection(db, "questions"));
+                questions = querySnapshot.docs.map(doc => doc.data());
                 // Shuffle questions
                 questions = questions.sort(() => Math.random() - 0.5);
                 showQuestion();
