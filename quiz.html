@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz</title>
+    <title>Quiz Questions</title>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -20,87 +20,27 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        let questions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let timer;
-        let totalTime = 0;
 
         async function fetchQuestions() {
             const querySnapshot = await getDocs(collection(db, "questions"));
+            const questionsList = document.getElementById('questions');
+
             if (querySnapshot.empty) {
-                document.getElementById('quiz').innerHTML = "<h2>No questions available!</h2>";
+                questionsList.innerHTML = "<h2>No questions available!</h2>";
                 return;
             }
+
             querySnapshot.forEach(doc => {
-                questions.push(doc.data());
+                const questionData = doc.data();
+                questionsList.innerHTML += `<p>${questionData.question}</p>`;
             });
-            questions = questions.sort(() => Math.random() - 0.5); // Shuffle questions
-            startQuiz();
-        }
-
-        function startQuiz() {
-            document.getElementById('quiz').innerHTML = '';
-            currentQuestionIndex = 0;
-            score = 0;
-            totalTime = 0;
-            showQuestion();
-        }
-
-        function showQuestion() {
-            if (currentQuestionIndex >= questions.length) {
-                showResults();
-                return;
-            }
-            const question = questions[currentQuestionIndex];
-            const questionElement = document.createElement('div');
-            questionElement.innerHTML = `
-                <h3>${question.question}</h3>
-                <ul>
-                    ${question.answers.map((answer, index) => `<li><button onclick="checkAnswer('${answer}')">${answer}</button></li>`).join('')}
-                </ul>
-            `;
-            document.getElementById('quiz').appendChild(questionElement);
-            startTimer();
-        }
-
-        function checkAnswer(selectedAnswer) {
-            clearInterval(timer); // Stop the timer
-            const question = questions[currentQuestionIndex];
-            if (selectedAnswer === question.correctAnswer) {
-                score++;
-            }
-            currentQuestionIndex++;
-            showQuestion();
-        }
-
-        function showResults() {
-            const totalTimeInSeconds = (totalTime / 1000).toFixed(2);
-            document.getElementById('quiz').innerHTML = `
-                <h2>Quiz Over!</h2>
-                <h3>Score: ${score} out of ${questions.length}</h3>
-                <h3>Total time taken: ${totalTimeInSeconds} seconds</h3>
-            `;
-        }
-
-        function startTimer() {
-            let timeLeft = 40000; // 40 seconds
-            timer = setInterval(() => {
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    checkAnswer(""); // Automatically move to the next question
-                } else {
-                    timeLeft -= 1000;
-                    totalTime += 1000;
-                }
-            }, 1000);
         }
 
         window.onload = fetchQuestions;
     </script>
 </head>
 <body>
-    <h1>Welcome to the Quiz!</h1>
-    <div id="quiz"></div>
+    <h1>Quiz Questions</h1>
+    <div id="questions"></div>
 </body>
 </html>
