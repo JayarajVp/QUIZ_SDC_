@@ -35,6 +35,7 @@
                 questions.push({ id: doc.id, ...doc.data() });
             });
             shuffleQuestions();
+            console.log('Questions fetched:', questions); // Debugging statement
             displayQuestion();
         }
 
@@ -48,7 +49,9 @@
         function startQuiz() {
             const name = document.getElementById('name').value;
             if (name) {
+                console.log('Starting quiz for:', name); // Debugging statement
                 document.getElementById('nameInput').style.display = 'none';
+                document.getElementById('quiz').style.display = 'block'; // Show quiz section
                 startTime = performance.now(); // Start timing
                 displayQuestion();
             } else {
@@ -63,7 +66,7 @@
                 const answersContainer = document.getElementById('answers');
                 answersContainer.innerHTML = '';
 
-                questionData.answers.forEach((answer, index) => {
+                questionData.answers.forEach((answer) => {
                     const button = document.createElement('button');
                     button.innerText = answer;
                     button.onclick = () => selectAnswer(answer);
