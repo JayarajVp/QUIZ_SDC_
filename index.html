@@ -18,14 +18,13 @@
             background-position: center; /* Center the background */
             color: white; /* Text color */
         }
-        .box, .quiz-container {
+        .box {
             background: rgba(0, 0, 0, 0.7); /* Semi-transparent background for readability */
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Subtle shadow effect */
             width: 80%; /* Set a width for the container */
             max-width: 600px; /* Maximum width */
-            display: none; /* Hide quiz container by default */
         }
         .inputbox {
             margin-bottom: 20px; /* Space between input boxes */
@@ -36,37 +35,10 @@
             border: none;
             border-radius: 5px;
         }
-        #timer {
-            font-size: 24px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .question {
-            margin-bottom: 15px; /* Space between question and options */
-        }
-        .option {
-            margin: 5px 0; /* Space between options */
-        }
-        .next-btn {
-            background: #28a745; /* Green button */
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .next-btn:hover {
-            background: #218838; /* Darker green on hover */
-        }
-        #result {
-            display: none; /* Hide result by default */
-            margin-top: 20px; /* Space above result */
-        }
     </style>
 </head>
 <body>
-    <div class="box" id="userInfoBox">
+    <div class="box">
         <div class="form">
             <h2>SDC Quiz</h2> <!-- Form title -->
             <form id="userInfoForm">
@@ -87,20 +59,10 @@
         </div>
     </div>
 
-    <div class="quiz-container" id="quizContainer">
-        <div id="timer">Time Left: <span id="timeLeft">40</span>s</div>
-        <div class="question" id="question"></div>
-        <div id="options"></div>
-        <button class="next-btn" id="nextButton">Next</button>
-        <div id="result"></div>
-    </div>
-
-    <div id="loading">Loading questions...</div>
-
     <script type="module">
         // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getDatabase } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
         // Firebase configuration (Your credentials)
         const firebaseConfig = {
@@ -131,144 +93,9 @@
             localStorage.setItem("section", section);
             localStorage.setItem("semester", semester);
 
-            // Show quiz container and hide user info box
-            document.getElementById("userInfoBox").style.display = "none";
-            document.getElementById("quizContainer").style.display = "block";
-            loadQuestions(); // Load questions after form submission
+            // Redirect to quiz.html
+            window.location.href = "quiz.html"; // Redirect to quiz page
         });
-
-        let questions = [];
-        let currentQuestionIndex = 0;
-        let score = 0;
-        let totalTime = 0; // Time taken in seconds
-        let timer;
-
-        // Fetch questions from Firebase
-        function loadQuestions() {
-            onValue(ref(db, 'questions/'), (snapshot) => {
-                questions = snapshot.val();
-                const questionKeys = Object.keys(questions);
-                questions = questionKeys.sort(() => Math.random() - 0.5).map(key => questions[key]); // Shuffle questions
-                loadQuestion();
-            }, {
-                onlyOnce: true
-            });
-        }
-
-        // Load question
-        function loadQuestion() {
-            if (currentQuestionIndex < questions.length) {
-                const questionData = questions[currentQuestionIndex];
-                document.getElementById("loading").style.display = "none";
-                document.getElementById("question").innerText = questionData.question;
-
-                const optionsDiv = document.getElementById("options");
-                optionsDiv.innerHTML = ""; // Clear previous options
-                for (const [key, value] of Object.entries(questionData.options)) {
-                    const optionDiv = document.createElement("div");
-                    optionDiv.className = "option";
-                    optionDiv.innerHTML = `
-                        <input type="radio" name="option" id="${key}" value="${key}">
-                        <label for="${key}">${value}</label>
-                    `;
-                    optionsDiv.appendChild(optionDiv);
-                }
-
-                startTimer();
-            } else {
-                finishQuiz();
-            }
-        }
-
-        // Start timer
-        function startTimer() {
-            let timeLeft = 40; // 40 seconds for each question
-            document.getElementById("timeLeft").innerText = timeLeft;
-
-            timer = setInterval(() => {
-                timeLeft--;
-                totalTime++;
-
-                if (timeLeft <= 0) {
-                    clearInterval(timer);
-                    alert("Time's up! Moving to the next question.");
-                    currentQuestionIndex++;
-                    loadQuestion();
-                }
-                document.getElementById("timeLeft").innerText = timeLeft;
-            }, 1000);
-        }
-
-        // Handle Next Question
-        document.getElementById("nextButton").addEventListener('click', () => {
-            clearInterval(timer);
-            const selectedOption = document.querySelector('input[name="option"]:checked');
-
-            if (selectedOption) {
-                const answer = selectedOption.value;
-                if (answer === questions[currentQuestionIndex].correctOption) {
-                    score++;
-                }
-            }
-
-            currentQuestionIndex++;
-
-            // If two questions are answered, display score and time
-            if (currentQuestionIndex % 2 === 0) {
-                displayScoreAndTime();
-            } else {
-                loadQuestion();
-            }
-        });
-
-        // Display score and time taken
-        function displayScoreAndTime() {
-            const minutes = Math.floor(totalTime / 60);
-            const seconds = totalTime % 60;
-
-            const resultDiv = document.getElementById("result");
-            resultDiv.innerHTML = `
-                <h3>Score after ${currentQuestionIndex} questions: ${score}</h3>
-                <p>Total Time: ${minutes} min ${seconds} sec</p>
-            `;
-            resultDiv.style.display = "block";
-
-            // Load next question after a short delay
-            setTimeout(() => {
-                resultDiv.style.display = "none"; // Hide result
-                loadQuestion(); // Load the next question
-            }, 3000); // Delay before moving to the next question
-        }
-
-        // Finish the quiz
-        function finishQuiz() {
-            clearInterval(timer);
-            const minutes = Math.floor(totalTime / 60);
-            const seconds = totalTime % 60;
-
-            const finalResultDiv = document.getElementById("result");
-            finalResultDiv.innerHTML = `
-                <h3>Quiz Finished!</h3>
-                <h3>Your final score: ${score} out of ${questions.length}</h3>
-                <p>Total Time Taken: ${minutes} min ${seconds} sec</p>
-            `;
-            finalResultDiv.style.display = "block";
-
-            // Store result in database
-            const username = localStorage.getItem("username");
-            const resultRef = ref(db, 'results/' + username);
-            set(resultRef, {
-                score: score,
-                timeTaken: {
-                    minutes: minutes,
-                    seconds: seconds
-                }
-            }).then(() => {
-                console.log("Results saved successfully!");
-            }).catch((error) => {
-                console.error("Error saving results: ", error);
-            });
-        }
     </script>
 </body>
 </html>
