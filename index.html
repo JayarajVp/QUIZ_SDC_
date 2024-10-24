@@ -13,21 +13,21 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            background-image: url('your-background-image-url.jpg'); /* Background image */
-            background-size: cover; /* Cover the entire viewport */
-            background-position: center; /* Center the background */
-            color: white; /* Text color */
+            background-image: url('your-background-image-url.jpg');
+            background-size: cover;
+            background-position: center;
+            color: white;
         }
         .box {
-            background: rgba(0, 0, 0, 0.7); /* Semi-transparent background for readability */
+            background: rgba(0, 0, 0, 0.7);
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Subtle shadow effect */
-            width: 80%; /* Set a width for the container */
-            max-width: 600px; /* Maximum width */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 80%;
+            max-width: 600px;
         }
         .inputbox {
-            margin-bottom: 20px; /* Space between input boxes */
+            margin-bottom: 20px;
         }
         input[type="text"], .sub {
             width: 100%;
@@ -39,32 +39,28 @@
 </head>
 <body>
     <div class="box">
-        <div class="form">
-            <h2>SDC Quiz</h2> <!-- Form title -->
-            <form id="userInfoForm">
-                <div class="inputbox">
-                    <input type="text" id="username" required>
-                    <span>Username</span>
-                </div>
-                <div class="inputbox">
-                    <input type="text" id="section" required> <!-- Section field -->
-                    <span>Section</span>
-                </div>
-                <div class="inputbox">
-                    <input type="text" id="semester" required> <!-- Semester field -->
-                    <span>Semester</span>
-                </div>
-                <input type="submit" value="Start Quiz" class="sub" id="submit">
-            </form>
-        </div>
+        <h2>SDC Quiz</h2>
+        <form id="userInfoForm">
+            <div class="inputbox">
+                <input type="text" id="username" required>
+                <span>Username</span>
+            </div>
+            <div class="inputbox">
+                <input type="text" id="section" required>
+                <span>Section</span>
+            </div>
+            <div class="inputbox">
+                <input type="text" id="semester" required>
+                <span>Semester</span>
+            </div>
+            <input type="submit" value="Start Quiz" class="sub" id="submit">
+        </form>
     </div>
 
     <script type="module">
-        // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getDatabase } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-        // Firebase configuration (Your credentials)
         const firebaseConfig = {
             apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
             authDomain: "quiz-fb5d9.firebaseapp.com",
@@ -75,26 +71,20 @@
             measurementId: "G-BPTGDJXS8K"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app); // Initialize Realtime Database
+        const db = getDatabase(app);
 
-        // Event listener for form submission
         document.getElementById("userInfoForm").addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent page reload
-
-            // Get input values
-            const username = document.getElementById("username").value.replace(/\s+/g, '_'); // Sanitize username
+            e.preventDefault();
+            const username = document.getElementById("username").value.replace(/\s+/g, '_');
             const section = document.getElementById("section").value;
             const semester = document.getElementById("semester").value;
 
-            // Store user info in localStorage
             localStorage.setItem("username", username);
             localStorage.setItem("section", section);
             localStorage.setItem("semester", semester);
 
-            // Redirect to quiz.html
-            window.location.href = "quiz.html"; // Redirect to quiz page
+            window.location.href = "quiz.html";
         });
     </script>
 </body>
