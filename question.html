@@ -3,90 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Question Input</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-    </style>
-</head>
-<body>
-    <h1>Enter Questions and Answers</h1>
+    <title>Add Questions</title>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-    <!-- Form to input questions and answers -->
-    <div class="question-form">
-        <form id="questionForm">
-            <label for="question">Question:</label>
-            <input type="text" id="question" name="question" required><br><br>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDPIA6AaCVO1sjcZACFup1C5Eqre8FHTVU",
+            authDomain: "quizsdc-da4c7.firebaseapp.com",
+            projectId: "quizsdc-da4c7",
+            storageBucket: "quizsdc-da4c7.appspot.com",
+            messagingSenderId: "926753843209",
+            appId: "1:926753843209:web:3cb8f6ec9611c585bf30d8",
+            measurementId: "G-THZY5FZHMZ"
+        };
 
-            <label for="answer1">Answer 1:</label>
-            <input type="text" id="answer1" name="answer1" required><br><br>
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-            <label for="answer2">Answer 2:</label>
-            <input type="text" id="answer2" name="answer2" required><br><br>
-
-            <label for="answer3">Answer 3:</label>
-            <input type="text" id="answer3" name="answer3" required><br><br>
-
-            <label for="answer4">Answer 4:</label>
-            <input type="text" id="answer4" name="answer4" required><br><br>
-
-            <label for="correctAnswer">Correct Answer (1-4):</label>
-            <input type="number" id="correctAnswer" name="correctAnswer" min="1" max="4" required><br><br>
-
-            <button type="button" onclick="addQuestion()">Add Question</button>
-            <button type="button" onclick="saveToFile()">Save to File</button>
-        </form>
-    </div>
-
-    <h2>Questions Added:</h2>
-    <ul id="questionList"></ul>
-
-    <script>
-        const questions = [];
-
-        function addQuestion() {
+        async function addQuestion() {
             const question = document.getElementById('question').value;
-            const answers = [
-                document.getElementById('answer1').value,
-                document.getElementById('answer2').value,
-                document.getElementById('answer3').value,
-                document.getElementById('answer4').value,
-            ];
-            const correctAnswerIndex = parseInt(document.getElementById('correctAnswer').value) - 1; // Adjust for 0-based index
+            const answers = [...document.querySelectorAll('input[name="answer"]')].map(input => input.value);
+            const correctAnswer = document.querySelector('input[name="correct"]:checked').value;
 
-            // Structure for question with choices
             const questionData = {
-                question: question,
-                answers: answers,
-                correctAnswer: answers[correctAnswerIndex] // Store the correct answer
+                question,
+                answers,
+                correctAnswer
             };
 
-            // Add question to array
-            questions.push(questionData);
-
-            // Update the list on the page
-            const questionList = document.getElementById('questionList');
-            const listItem = document.createElement('li');
-            listItem.textContent = `${question} - [${answers.join(', ')}] | Correct Answer: ${answers[correctAnswerIndex]}`;
-            questionList.appendChild(listItem);
-
-            // Clear form for new question input
-            document.getElementById('questionForm').reset();
-        }
-
-        function saveToFile() {
-            // Convert the questions array to a string
-            const text = JSON.stringify(questions, null, 2);
-
-            // Create a blob object to download
-            const blob = new Blob([text], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'set.txt';
-            link.click();
+            try {
+                const docRef = await addDoc(collection(db, "questions"), questionData);
+                console.log("Question added with ID: ", docRef.id);
+            } catch (e) {
+                console.error("Error adding question: ", e);
+            }
         }
     </script>
+</head>
+<body>
+    <h1>Add Question</h1>
+    <input type="text" id="question" placeholder="Enter your question" required>
+    <input type="text" name="answer" placeholder="Answer 1" required>
+    <input type="text" name="answer" placeholder="Answer 2" required>
+    <input type="text" name="answer" placeholder="Answer 3" required>
+    <input type="text" name="answer" placeholder="Answer 4" required>
+    <input type="radio" name="correct" value="Answer 1" required> Correct Answer 1
+    <input type="radio" name="correct" value="Answer 2"> Correct Answer 2
+    <input type="radio" name="correct" value="Answer 3"> Correct Answer 3
+    <input type="radio" name="correct" value="Answer 4"> Correct Answer 4
+    <button onclick="addQuestion()">Add Question</button>
 </body>
 </html>
