@@ -3,11 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Questions</title>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    <title>Quiz Page</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-image: url('your-image-url.jpg'); /* Background image */
+            background-size: cover; /* Cover the entire viewport */
+            background-position: center; /* Center the background */
+            color: white; /* Text color */
+        }
+        .quiz-container {
+            background: rgba(0, 0, 0, 0.7); /* Semi-transparent background for readability */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Subtle shadow effect */
+            width: 80%; /* Set a width for the container */
+            max-width: 600px; /* Maximum width */
+        }
+        #timer {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .question {
+            margin-bottom: 15px; /* Space between question and options */
+        }
+        .option {
+            margin: 5px 0; /* Space between options */
+        }
+        .next-btn {
+            background: #28a745; /* Green button */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .next-btn:hover {
+            background: #218838; /* Darker green on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container" id="quizContainer" style="display: none;">
+        <div id="timer">Time Left: <span id="timeLeft">40</span>s</div>
+        <div class="question" id="question"></div>
+        <div id="options"></div>
+        <button class="next-btn" id="nextButton">Next</button>
+        <div id="result" style="display: none;"></div>
+    </div>
+    <div id="loading">Loading questions...</div>
 
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        // Firebase configuration (Your credentials)
         const firebaseConfig = {
             apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
             authDomain: "quiz-fb5d9.firebaseapp.com",
@@ -18,29 +77,116 @@
             measurementId: "G-BPTGDJXS8K"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const db = getDatabase(app); // Initialize Realtime Database
 
-        async function fetchQuestions() {
-            const querySnapshot = await getDocs(collection(db, "questions"));
-            const questionsList = document.getElementById('questions');
+        // Retrieve user data from localStorage (or any other way you choose)
+        const username = localStorage.getItem("username"); // Assuming you store username in local storage
+        const section = localStorage.getItem("section");
+        const semester = localStorage.getItem("semester");
 
-            if (querySnapshot.empty) {
-                questionsList.innerHTML = "<h2>No questions available!</h2>";
-                return;
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+        let totalTime = 0; // Time taken in seconds
+
+        // Fetch questions from Firebase
+        onValue(ref(db, 'questions/'), (snapshot) => {
+            questions = snapshot.val();
+            const questionKeys = Object.keys(questions);
+            questions = questionKeys.sort(() => Math.random() - 0.5).map(key => questions[key]); // Shuffle questions
+            loadQuestion();
+        }, {
+            onlyOnce: true
+        });
+
+        // Load question
+        function loadQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const questionData = questions[currentQuestionIndex];
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("quizContainer").style.display = "block";
+                document.getElementById("question").innerText = questionData.question;
+
+                const optionsDiv = document.getElementById("options");
+                optionsDiv.innerHTML = ""; // Clear previous options
+                for (const [key, value] of Object.entries(questionData.options)) {
+                    const optionDiv = document.createElement("div");
+                    optionDiv.className = "option";
+                    optionDiv.innerHTML = `
+                        <input type="radio" name="option" id="${key}" value="${key}">
+                        <label for="${key}">${value}</label>
+                    `;
+                    optionsDiv.appendChild(optionDiv);
+                }
+
+                startTimer();
+            } else {
+                finishQuiz();
             }
-
-            querySnapshot.forEach(doc => {
-                const questionData = doc.data();
-                questionsList.innerHTML += `<p>${questionData.question}</p>`;
-            });
         }
 
-        window.onload = fetchQuestions;
+        // Start timer
+        function startTimer() {
+            let timeLeft = 40; // 40 seconds for each question
+            document.getElementById("timeLeft").innerText = timeLeft;
+
+            timer = setInterval(() => {
+                timeLeft--;
+                totalTime++;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert("Time's up! Moving to the next question.");
+                    currentQuestionIndex++;
+                    loadQuestion();
+                }
+                document.getElementById("timeLeft").innerText = timeLeft;
+            }, 1000);
+        }
+
+        // Handle Next Question
+        document.getElementById("nextButton").addEventListener('click', () => {
+            clearInterval(timer);
+            const selectedOption = document.querySelector('input[name="option"]:checked');
+
+            if (selectedOption) {
+                const answer = selectedOption.value;
+                if (answer === questions[currentQuestionIndex].correctOption) {
+                    score++;
+                }
+            }
+
+            currentQuestionIndex++;
+            loadQuestion();
+        });
+
+        // Finish Quiz
+        function finishQuiz() {
+            clearInterval(timer);
+            document.getElementById("quizContainer").style.display = "none";
+            const resultDiv = document.getElementById("result");
+            const minutes = Math.floor(totalTime / 60);
+            const seconds = totalTime % 60;
+
+            resultDiv.innerHTML = `
+                <h2>Quiz Finished!</h2>
+                <p>Your score: ${score} out of ${questions.length}</p>
+                <p>Total time taken: ${minutes} min ${seconds} sec</p>
+            `;
+            resultDiv.style.display = "block";
+
+            // Update user result in database
+            const userData = {
+                result: score
+            };
+            const usernameKey = username.replace(/\s+/g, '_');
+            set(ref(db, 'user/' + usernameKey), userData)
+                .then(() => console.log("User score updated successfully"))
+                .catch((error) => console.error("Error updating user score:", error));
+        }
     </script>
-</head>
-<body>
-    <h1>Quiz Questions</h1>
-    <div id="questions"></div>
 </body>
 </html>
