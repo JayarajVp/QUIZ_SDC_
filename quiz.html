@@ -4,59 +4,114 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz</title>
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyDPIA6AaCVO1sjcZACFup1C5Eqre8FHTVU",
-            authDomain: "quizsdc-da4c7.firebaseapp.com",
-            projectId: "quizsdc-da4c7",
-            storageBucket: "quizsdc-da4c7.appspot.com",
-            messagingSenderId: "926753843209",
-            appId: "1:926753843209:web:3cb8f6ec9611c585bf30d8",
-            measurementId: "G-THZY5FZHMZ"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
+    <script>
         let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+        let totalTime = 0;
+        let studentName = "";
 
+        // Load questions from questions.json
         async function loadQuestions() {
-            const querySnapshot = await getDocs(collection(db, "questions"));
-            querySnapshot.forEach((doc) => {
-                questions.push({ id: doc.id, ...doc.data() });
-            });
-            startQuiz();
+            const response = await fetch('questions.json');
+            questions = await response.json();
+            questions.sort(() => Math.random() - 0.5); // Shuffle questions
+
+            // Prompt for the user's name at the beginning
+            studentName = prompt("Please enter your name:");
+            displayQuestion();
         }
 
-        function startQuiz() {
-            // Start quiz logic here using the `questions` array
-            console.log(questions); // Use the questions for your quiz logic
-        }
+        function displayQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const question = questions[currentQuestionIndex];
+                document.getElementById('question').textContent = question.question;
+                const answersContainer = document.getElementById('answers');
+                answersContainer.innerHTML = '';
 
-        async function saveResult(studentName, score, timeTaken) {
-            const resultData = { studentName, score, timeTaken };
-            try {
-                const docRef = await addDoc(collection(db, "results"), resultData);
-                console.log("Result saved with ID: ", docRef.id);
-            } catch (e) {
-                console.error("Error saving result: ", e);
+                question.answers.forEach((answer, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = answer;
+                    button.onclick = () => checkAnswer(answer);
+                    answersContainer.appendChild(button);
+                });
+
+                startTimer();
+            } else {
+                displayResults();
             }
         }
 
-        window.onload = () => {
-            loadQuestions(); // Load questions when the page is loaded
-        };
+        function checkAnswer(selectedAnswer) {
+            clearTimeout(timer);
+            if (selectedAnswer === questions[currentQuestionIndex].correctAnswer) {
+                score++;
+            }
+            currentQuestionIndex++;
+            displayQuestion();
+        }
+
+        function startTimer() {
+            let timeLeft = 40;
+            document.getElementById('timer').textContent = `Time left: ${timeLeft}s`;
+            timer = setInterval(() => {
+                timeLeft--;
+                document.getElementById('timer').textContent = `Time left: ${timeLeft}s`;
+                totalTime += 1000;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    checkAnswer(null); // Move to next question
+                }
+            }, 1000);
+        }
+
+        function displayResults() {
+            const result = {
+                name: studentName,
+                score: score,
+                totalTime: totalTime / 1000 // Convert to seconds
+            };
+
+            // Display results
+            document.body.innerHTML = `
+                <h1>Quiz Completed!</h1>
+                <p>Name: ${result.name}</p>
+                <p>Your Score: ${result.score} / ${questions.length}</p>
+                <p>Total Time: ${result.totalTime} seconds</p>
+            `;
+
+            // Call a function to save results
+            saveResult(result);
+        }
+
+        async function saveResult(result) {
+            // Fetch existing results
+            const response = await fetch('results.json');
+            const results = await response.json();
+
+            // Add the new result
+            results.push(result);
+
+            // Save back to results.json
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'results.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        window.onload = loadQuestions;
     </script>
 </head>
 <body>
     <h1>Quiz</h1>
-    <div id="quiz-container"></div>
-    <!-- Add your quiz logic and timer here -->
+    <div id="timer"></div>
+    <h2 id="question"></h2>
+    <div id="answers"></div>
 </body>
 </html>
