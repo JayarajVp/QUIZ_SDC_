@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Results</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f7f7f7;
+        }
+        .container {
+            margin: 50px auto;
+            width: 80%;
+            max-width: 1000px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #333;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Quiz Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Username</th>
+                    <th>Section</th>
+                    <th>Semester</th>
+                    <th>Score</th>
+                    <th>Total Time Taken (min:sec:ms)</th>
+                </tr>
+            </thead>
+            <tbody id="resultsTable">
+                <!-- Results will be displayed here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+        // Firebase configuration from your code
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
+            authDomain: "quiz-fb5d9.firebaseapp.com",
+            projectId: "quiz-fb5d9",
+            storageBucket: "quiz-fb5d9.appspot.com",
+            messagingSenderId: "916039221761",
+            appId: "1:916039221761:web:df2104737062375b3ff600",
+            measurementId: "G-BPTGDJXS8K"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Load and display results from Firebase
+        async function loadResults() {
+            const dbRef = ref(db);
+            const snapshot = await get(child(dbRef, 'results'));
+
+            if (snapshot.exists()) {
+                const results = Object.values(snapshot.val());
+
+                // Sort results by score (descending) and time taken (ascending)
+                results.sort((a, b) => {
+                    if (b.score === a.score) {
+                        return parseTime(a.totalTimeTaken) - parseTime(b.totalTimeTaken);
+                    }
+                    return b.score - a.score;
+                });
+
+                displayResults(results);
+            } else {
+                console.log("No results found in database");
+            }
+        }
+
+        // Helper function to parse time in 'mm:ss:ms' format to milliseconds
+        function parseTime(timeString) {
+            const [minutes, seconds, milliseconds] = timeString.split(':').map(Number);
+            return (minutes * 60 * 1000) + (seconds * 1000) + milliseconds;
+        }
+
+        // Display results in the table
+        function displayResults(results) {
+            const resultsTable = document.getElementById('resultsTable');
+            resultsTable.innerHTML = ''; // Clear previous results
+
+            results.forEach((result, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${result.username}</td>
+                    <td>${result.section}</td>
+                    <td>${result.semester}</td>
+                    <td>${result.score}</td>
+                    <td>${result.totalTimeTaken}</td>
+                `;
+                resultsTable.appendChild(row);
+            });
+        }
+
+        // Load results on page load
+        window.onload = loadResults;
+    </script>
+
+</body>
+</html>
