@@ -1,0 +1,69 @@
+<html>
+    <head>
+        <title>Firebase Quiz Form</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="box">
+            <div class="form">
+                <h2>SDC Quiz</h2> <!-- Form title updated -->
+                <form>
+                    <div class="inputbox">
+                        <input type="text" value="" id="username" required>
+                        <span>Username</span>
+                    </div>
+                    <div class="inputbox">
+                        <input type="text" value="" id="section" required> <!-- Email replaced with Section -->
+                        <span>Section</span>
+                    </div>
+                    <div class="inputbox">
+                        <input type="text" value="" id="semester" required> <!-- Phone replaced with Semester -->
+                        <span>Semester</span>
+                    </div>
+                    <input type="submit" value="Submit" class="sub" id="submit">
+                </form>
+            </div>
+        </div>
+
+        <script type="module">
+            // Import Firebase SDKs
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+            import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+            import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+
+            // Firebase configuration from your code
+            const firebaseConfig = {
+                apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
+                authDomain: "quiz-fb5d9.firebaseapp.com",
+                projectId: "quiz-fb5d9",
+                storageBucket: "quiz-fb5d9.appspot.com",
+                messagingSenderId: "916039221761",
+                appId: "1:916039221761:web:df2104737062375b3ff600",
+                measurementId: "G-BPTGDJXS8K"
+            };
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+            const db = getDatabase(app); // Initialize database
+
+            // Event listener for form submission
+            document.getElementById("submit").addEventListener('click', function(e) {
+                e.preventDefault(); // Prevent form reload
+
+                const username = document.getElementById("username").value;
+                const section = document.getElementById("section").value;
+                const semester = document.getElementById("semester").value;
+
+                // Save data to Firebase Realtime Database
+                set(ref(db, 'user/' + username), {
+                    username: username,
+                    section: section,
+                    semester: semester
+                });
+
+                alert("Submission Successful!"); // Alert user on success
+            });
+        </script>
+    </body>
+</html>
