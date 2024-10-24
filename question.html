@@ -3,13 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Questions</title>
-    <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    <title>Quiz Question Input</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: url('your-image-url.jpg'); /* Background image */
+            background-size: cover; /* Cover the entire viewport */
+            background-position: center; /* Center the background */
+        }
+        .box {
+            background: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Subtle shadow effect */
+        }
+        .form {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center form elements */
+        }
+        .inputbox {
+            margin-bottom: 15px; /* Space between input fields */
+            width: 100%;
+        }
+        .inputbox input {
+            width: 100%; /* Full width of the input */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .inputbox span {
+            display: block;
+            margin-bottom: 5px; /* Space above the label */
+            font-weight: bold;
+        }
+        .sub {
+            background: #28a745; /* Green button */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .sub:hover {
+            background: #218838; /* Darker green on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="form">
+            <h2>Input Quiz Question</h2> <!-- Form title -->
+            <form id="questionForm">
+                <div class="inputbox">
+                    <input type="text" id="question" required>
+                    <span>Question</span>
+                </div>
+                <div class="inputbox">
+                    <input type="text" id="option1" required>
+                    <span>Option 1</span>
+                </div>
+                <div class="inputbox">
+                    <input type="text" id="option2" required>
+                    <span>Option 2</span>
+                </div>
+                <div class="inputbox">
+                    <input type="text" id="option3" required>
+                    <span>Option 3</span>
+                </div>
+                <div class="inputbox">
+                    <input type="text" id="option4" required>
+                    <span>Option 4</span>
+                </div>
+                <div class="inputbox">
+                    <input type="text" id="correctOption" required>
+                    <span>Correct Option (1-4)</span>
+                </div>
+                <input type="submit" value="Submit Question" class="sub" id="submit">
+            </form>
+        </div>
+    </div>
 
-        // Your Firebase configuration
+    <script type="module">
+        // Import Firebase SDKs
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
+
+        // Firebase configuration (Your credentials)
         const firebaseConfig = {
             apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
             authDomain: "quiz-fb5d9.firebaseapp.com",
@@ -22,57 +108,44 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+        const db = getDatabase(app); // Initialize Realtime Database
 
-        async function addQuestion() {
-            const question = document.getElementById('question').value;
-            const answers = [...document.querySelectorAll('input[name="answer"]')].map(input => input.value);
-            const correctAnswer = document.querySelector('input[name="correct"]:checked').value;
+        // Event listener for form submission
+        document.getElementById("questionForm").addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent page reload
 
+            // Get input values
+            const question = document.getElementById("question").value;
+            const options = {
+                option1: document.getElementById("option1").value,
+                option2: document.getElementById("option2").value,
+                option3: document.getElementById("option3").value,
+                option4: document.getElementById("option4").value
+            };
+            const correctOption = document.getElementById("correctOption").value;
+
+            // Prepare data object
             const questionData = {
-                question,
-                answers,
-                correctAnswer
+                question: question,
+                options: options,
+                correctOption: correctOption
             };
 
-            try {
-                await addDoc(collection(db, "questions"), questionData);
-                alert("Question added successfully!");
-            } catch (e) {
-                console.error("Error adding question: ", e);
-            }
-        }
+            console.log("Submitting Question Data:", questionData); // Log data to ensure correctness
 
-        async function clearQuestions() {
-            const querySnapshot = await getDocs(collection(db, "questions"));
-            querySnapshot.forEach(async (docSnapshot) => {
-                await deleteDoc(doc(db, "questions", docSnapshot.id));
-            });
-            alert("All questions cleared!");
-        }
-
-        async function clearResults() {
-            const querySnapshot = await getDocs(collection(db, "results"));
-            querySnapshot.forEach(async (docSnapshot) => {
-                await deleteDoc(doc(db, "results", docSnapshot.id));
-            });
-            alert("All results cleared!");
-        }
+            // Save data using set() to overwrite completely
+            set(ref(db, 'questions/' + question.replace(/\s+/g, '_')), questionData)
+                .then(() => {
+                    console.log("Question saved successfully:", questionData); // Confirm success
+                    alert("Question Submission Successful!");
+                    // Reset form after submission
+                    document.getElementById("questionForm").reset();
+                })
+                .catch((error) => {
+                    console.error("Error saving question data:", error); // Log errors
+                });
+        });
     </script>
-</head>
-<body>
-    <h1>Add Question</h1>
-    <input type="text" id="question" placeholder="Enter your question" required>
-    <input type="text" name="answer" placeholder="Answer 1" required>
-    <input type="text" name="answer" placeholder="Answer 2" required>
-    <input type="text" name="answer" placeholder="Answer 3" required>
-    <input type="text" name="answer" placeholder="Answer 4" required>
-    <input type="radio" name="correct" value="Answer 1" required> Correct Answer 1
-    <input type="radio" name="correct" value="Answer 2"> Correct Answer 2
-    <input type="radio" name="correct" value="Answer 3"> Correct Answer 3
-    <input type="radio" name="correct" value="Answer 4"> Correct Answer 4
-    <button onclick="addQuestion()">Add Question</button>
-    <button onclick="clearQuestions()">Clear All Questions</button>
-    <button onclick="clearResults()">Clear All Results</button>
 </body>
 </html>
