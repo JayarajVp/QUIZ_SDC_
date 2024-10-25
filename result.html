@@ -97,13 +97,15 @@
 
                 // Sort results by score (descending) and time taken (ascending)
                 results.sort((a, b) => {
-                    if (b.score === a.score) {
-                        // If scores are equal, compare total times
-                        const timeA = parseTime(a.totalTime);
-                        const timeB = parseTime(b.totalTime);
-                        return timeA - timeB; // Ascending order (less time first)
+                    // First compare the scores
+                    if (b.score !== a.score) {
+                        return b.score - a.score; // Descending order
                     }
-                    return b.score - a.score; // Descending order (higher score first)
+
+                    // If scores are the same, compare the total time
+                    const timeA = parseTime(a.totalTime);
+                    const timeB = parseTime(b.totalTime);
+                    return timeA - timeB; // Ascending order (less time first)
                 });
 
                 displayResults(results);
