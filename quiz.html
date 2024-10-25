@@ -21,6 +21,12 @@
     #timer {
       font-weight: bold;
       color: red;
+      margin-bottom: 15px;
+    }
+    .option {
+      display: block;
+      text-align: left;
+      margin: 5px 0;
     }
   </style>
 </head>
@@ -36,7 +42,7 @@
     import { getDatabase, ref, get, push } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
+      apiKey: "AIzaSyCXUOurYSr1T7hgio8vutUg",
       authDomain: "quiz-fb5d9.firebaseapp.com",
       databaseURL: "https://quiz-fb5d9-default-rtdb.firebaseio.com",
       projectId: "quiz-fb5d9",
@@ -55,9 +61,8 @@
     let questions = [];
     let currentQuestionIndex = 0;
     let score = 0;
-    let totalTime = 0;
     let timer;
-    let selectedAnswerIndex = null; // Store the selected answer's index
+    let selectedAnswer = null; // Store the selected radio value (1-based index)
 
     // Retrieve quiz questions from Firebase
     get(ref(db, 'questions')).then((snapshot) => {
@@ -72,16 +77,17 @@
       const { question, options } = questions[currentQuestionIndex];
       questionContainer.innerHTML = `
         <h2>${question}</h2>
-        ${options.map((opt, i) => `
-          <button onclick="selectAnswer(${i})">${opt}</button>
-        `).join('')}
+        <form id="optionsForm">
+          ${options.map((opt, i) => `
+            <label class="option">
+              <input type="radio" name="option" value="${i + 1}">
+              ${opt}
+            </label>
+          `).join('')}
+        </form>
       `;
-      selectedAnswerIndex = null; // Reset selected answer index
+      selectedAnswer = null; // Reset selected answer
     }
-
-    window.selectAnswer = function (index) {
-      selectedAnswerIndex = index; // Store the index of the selected answer
-    };
 
     function startTimer(seconds) {
       let timeLeft = seconds;
@@ -93,20 +99,25 @@
 
         if (timeLeft <= 0) {
           clearInterval(timer);
-          checkAnswer(); // Automatically move to next question if time runs out
+          checkAnswer(); // Auto-submit if time runs out
         }
       }, 1000);
     }
 
     submitBtn.addEventListener('click', () => {
-      checkAnswer(); // Check answer and move to the next question on button click
+      checkAnswer(); // Check answer when the button is clicked
     });
 
     function checkAnswer() {
       clearInterval(timer); // Stop the timer
 
-      const correctOptionIndex = parseInt(questions[currentQuestionIndex].correctOption); // Get correct answer index
-      if (selectedAnswerIndex === correctOptionIndex) {
+      const selectedOption = document.querySelector('input[name="option"]:checked');
+      if (selectedOption) {
+        selectedAnswer = parseInt(selectedOption.value); // Get the 1-based index
+      }
+
+      const correctOptionIndex = parseInt(questions[currentQuestionIndex].correctOption); // 1-based index
+      if (selectedAnswer === correctOptionIndex) {
         score++;
       }
 
@@ -121,7 +132,6 @@
 
     function endQuiz() {
       const totalQuestions = questions.length;
-      const totalTimeTaken = totalQuestions * 40 - parseInt(timerDisplay.textContent.split(' ')[2].slice(0, -1));
 
       const username = new URLSearchParams(window.location.search).get('username');
       const userClass = new URLSearchParams(window.location.search).get('class');
@@ -130,7 +140,6 @@
       document.getElementById('result').innerHTML = `
         <h2>Quiz Completed!</h2>
         <p>Score: ${score} / ${totalQuestions}</p>
-        <p>Total Time: ${formatTime(totalTimeTaken)}</p>
       `;
 
       // Save the result to Firebase
@@ -138,17 +147,10 @@
         username,
         class: userClass,
         section,
-        score,
-        totalTime: formatTime(totalTimeTaken)
+        score
       });
 
       submitBtn.style.display = 'none'; // Hide the submit button after quiz ends
-    }
-
-    function formatTime(totalSeconds) {
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return `${minutes}m ${seconds}s`;
     }
   </script>
 </body>
