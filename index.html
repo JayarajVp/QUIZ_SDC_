@@ -76,7 +76,7 @@
     <div class="box">
         <div class="form">
             <h2>SDC Quiz</h2>
-            <form>
+            <form id="quizForm">
                 <div class="inputbox">
                     <input type="text" id="username" required>
                     <span>Username</span>
@@ -89,52 +89,22 @@
                     <input type="text" id="semester" required>
                     <span>Semester</span>
                 </div>
-                <input type="submit" value="Start Quiz" class="sub" id="submit">
+                <input type="submit" value="Start Quiz" class="sub">
             </form>
         </div>
     </div>
 
     <script type="module">
-        // Import Firebase SDKs
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
-
-        // Firebase configuration from your code
-        const firebaseConfig = {
-            apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
-            authDomain: "quiz-fb5d9.firebaseapp.com",
-            projectId: "quiz-fb5d9",
-            storageBucket: "quiz-fb5d9.appspot.com",
-            messagingSenderId: "916039221761",
-            appId: "1:916039221761:web:df2104737062375b3ff600",
-            measurementId: "G-BPTGDJXS8K"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getDatabase(app); // Initialize database
-
-        // Event listener for form submission
-        document.getElementById("submit").addEventListener('click', function(e) {
+        document.getElementById("quizForm").addEventListener('submit', function(e) {
             e.preventDefault(); // Prevent form reload
 
+            // Get user data
             const username = document.getElementById("username").value;
             const section = document.getElementById("section").value;
             const semester = document.getElementById("semester").value;
 
-            // Save data to Firebase Realtime Database
-            set(ref(db, 'user/' + username), {
-                username: username,
-                section: section,
-                semester: semester
-            });
-
-            alert("Submission Successful! Redirecting to Quiz...");
-
-            // Redirect to quiz.html
-            window.location.href = "quiz.html";
+            // Redirect to quiz.html with user data as query params
+            window.location.href = `quiz.html?username=${encodeURIComponent(username)}&section=${encodeURIComponent(section)}&semester=${encodeURIComponent(semester)}`;
         });
     </script>
 </body>
