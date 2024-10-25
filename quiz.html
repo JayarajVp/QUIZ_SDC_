@@ -10,7 +10,7 @@
       text-align: center;
       margin: 20px;
     }
-    h1, h2 {
+    h1 {
       margin-bottom: 10px;
     }
     button {
@@ -35,6 +35,10 @@
       margin: 5px 0;
       text-align: left;
     }
+    #resultContainer {
+      display: none; /* Hidden by default */
+      margin-top: 30px;
+    }
   </style>
 </head>
 <body>
@@ -42,7 +46,13 @@
   <div id="timer">Time Left: 40s</div>
   <div id="questionContainer"></div>
   <button id="submitBtn">Submit Answer</button>
-  <div id="result" style="margin-top: 20px;"></div>
+
+  <!-- Hidden result container for final message -->
+  <div id="resultContainer">
+    <h2>Thank You for Taking the Quiz!</h2>
+    <p id="finalScore"></p>
+    <p id="finalTime"></p>
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
@@ -65,20 +75,22 @@
     const questionContainer = document.getElementById('questionContainer');
     const submitBtn = document.getElementById('submitBtn');
     const timerDisplay = document.getElementById('timer');
-    const resultDisplay = document.getElementById('result');
+    const resultContainer = document.getElementById('resultContainer');
+    const finalScoreDisplay = document.getElementById('finalScore');
+    const finalTimeDisplay = document.getElementById('finalTime');
 
     let questions = [];
     let currentQuestionIndex = 0;
     let score = 0;
     let timer;
-    let quizStartTime; // Store the quiz start time
-    let selectedAnswer = null; // Store the selected answer (1-based index)
+    let quizStartTime;
+    let selectedAnswer = null;
 
-    // Retrieve quiz questions from Firebase
+    // Retrieve questions from Firebase
     get(ref(db, 'questions')).then((snapshot) => {
       if (snapshot.exists()) {
         questions = Object.values(snapshot.val()).sort(() => Math.random() - 0.5);
-        quizStartTime = performance.now(); // Start timing when quiz begins
+        quizStartTime = performance.now();
         showQuestion();
         startQuestionTimer(40);
       }
@@ -88,7 +100,7 @@
       const { question, options } = questions[currentQuestionIndex];
       questionContainer.innerHTML = `
         <h2>${question}</h2>
-        <form id="optionsForm" style="text-align: center;">
+        <form id="optionsForm">
           ${options.map((opt, i) => `
             <label class="option">
               <input type="radio" name="option" value="${i + 1}">
@@ -97,7 +109,7 @@
           `).join('')}
         </form>
       `;
-      selectedAnswer = null; // Reset selected answer
+      selectedAnswer = null;
     }
 
     function startQuestionTimer(seconds) {
@@ -110,24 +122,22 @@
 
         if (timeLeft <= 0) {
           clearInterval(timer);
-          checkAnswer(); // Auto-submit when time runs out
+          checkAnswer();
         }
       }, 1000);
     }
 
-    submitBtn.addEventListener('click', () => {
-      checkAnswer(); // Check the answer when button is clicked
-    });
+    submitBtn.addEventListener('click', checkAnswer);
 
     function checkAnswer() {
-      clearInterval(timer); // Stop the timer
+      clearInterval(timer);
 
       const selectedOption = document.querySelector('input[name="option"]:checked');
       if (selectedOption) {
-        selectedAnswer = parseInt(selectedOption.value); // Get the 1-based index
+        selectedAnswer = parseInt(selectedOption.value);
       }
 
-      const correctOptionIndex = parseInt(questions[currentQuestionIndex].correctOption); // 1-based index
+      const correctOptionIndex = parseInt(questions[currentQuestionIndex].correctOption);
       if (selectedAnswer === correctOptionIndex) {
         score++;
       }
@@ -135,28 +145,21 @@
       currentQuestionIndex++;
       if (currentQuestionIndex < questions.length) {
         showQuestion();
-        startQuestionTimer(40); // Restart timer for next question
+        startQuestionTimer(40);
       } else {
-        endQuiz(); // End the quiz if no more questions
+        endQuiz();
       }
     }
 
     function endQuiz() {
       const totalQuestions = questions.length;
-      const quizEndTime = performance.now(); // Capture end time
-      const totalTimeTaken = quizEndTime - quizStartTime; // Calculate total time in milliseconds
+      const quizEndTime = performance.now();
+      const totalTimeTaken = quizEndTime - quizStartTime;
 
       const username = new URLSearchParams(window.location.search).get('username');
       const userClass = new URLSearchParams(window.location.search).get('class');
       const section = new URLSearchParams(window.location.search).get('section');
 
-      resultDisplay.innerHTML = `
-        <h2>Quiz Completed!</h2>
-        <p>Score: ${score} / ${totalQuestions}</p>
-        <p>Total Time: ${formatTime(totalTimeTaken)}</p>
-      `;
-
-      // Save the result to Firebase
       push(ref(db, 'results'), {
         username,
         class: userClass,
@@ -165,7 +168,19 @@
         totalTime: formatTime(totalTimeTaken)
       });
 
-      submitBtn.style.display = 'none'; // Hide submit button after quiz ends
+      displayResults(score, formatTime(totalTimeTaken));
+    }
+
+    function displayResults(score, time) {
+      // Hide quiz elements
+      questionContainer.style.display = 'none';
+      submitBtn.style.display = 'none';
+      timerDisplay.style.display = 'none';
+
+      // Show the result container with the score and time
+      resultContainer.style.display = 'block';
+      finalScoreDisplay.textContent = `Your Score: ${score}`;
+      finalTimeDisplay.textContent = `Total Time Taken: ${time}`;
     }
 
     function formatTime(milliseconds) {
