@@ -72,7 +72,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-        // Firebase configuration from your code
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
             authDomain: "quiz-fb5d9.firebaseapp.com",
@@ -98,9 +98,12 @@
                 // Sort results by score (descending) and time taken (ascending)
                 results.sort((a, b) => {
                     if (b.score === a.score) {
-                        return parseTime(a.totalTime) - parseTime(b.totalTime);
+                        // If scores are equal, compare total times
+                        const timeA = parseTime(a.totalTime);
+                        const timeB = parseTime(b.totalTime);
+                        return timeA - timeB; // Ascending order (less time first)
                     }
-                    return b.score - a.score;
+                    return b.score - a.score; // Descending order (higher score first)
                 });
 
                 displayResults(results);
@@ -109,7 +112,7 @@
             }
         }
 
-        // Helper function to parse time in 'mm:ss:ms' format to milliseconds
+        // Helper function to parse time in 'mm:ss:ms' format to total milliseconds
         function parseTime(timeString) {
             const [minutes, seconds, milliseconds] = timeString.split(':').map(Number);
             return (minutes * 60 * 1000) + (seconds * 1000) + milliseconds;
