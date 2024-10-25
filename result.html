@@ -55,8 +55,8 @@
                 <tr>
                     <th>Rank</th>
                     <th>Username</th>
+                    <th>Class</th>
                     <th>Section</th>
-                    <th>Semester</th>
                     <th>Score</th>
                     <th>Total Time Taken (min:sec:ms)</th>
                 </tr>
@@ -98,7 +98,7 @@
                 // Sort results by score (descending) and time taken (ascending)
                 results.sort((a, b) => {
                     if (b.score === a.score) {
-                        return parseTime(a.totalTimeTaken) - parseTime(b.totalTimeTaken);
+                        return parseTime(a.totalTime) - parseTime(b.totalTime);
                     }
                     return b.score - a.score;
                 });
@@ -125,10 +125,10 @@
                 row.innerHTML = `
                     <td>${index + 1}</td>
                     <td>${result.username}</td>
-                    <td>${result.section}</td>
-                    <td>${result.semester}</td>
+                    <td>${result.class}</td>
+                    <td>${result.section || 'N/A'}</td>
                     <td>${result.score}</td>
-                    <td>${result.totalTimeTaken}</td>
+                    <td>${result.totalTime}</td>
                 `;
                 resultsTable.appendChild(row);
             });
