@@ -89,22 +89,26 @@
                     <input type="text" id="semester" required>
                     <span>Semester</span>
                 </div>
-                <input type="submit" value="Start Quiz" class="sub">
+                <input type="submit" value="Start Quiz" class="sub" id="submit">
             </form>
         </div>
     </div>
 
-    <script type="module">
+    <script>
         document.getElementById("quizForm").addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent form reload
+            e.preventDefault(); // Prevent page reload
 
-            // Get user data
             const username = document.getElementById("username").value;
             const section = document.getElementById("section").value;
             const semester = document.getElementById("semester").value;
 
-            // Redirect to quiz.html with user data as query params
-            window.location.href = `quiz.html?username=${encodeURIComponent(username)}&section=${encodeURIComponent(section)}&semester=${encodeURIComponent(semester)}`;
+            // Store user data in sessionStorage and redirect to quiz.html
+            sessionStorage.setItem('username', username);
+            sessionStorage.setItem('section', section);
+            sessionStorage.setItem('semester', semester);
+
+            // Redirect to quiz.html
+            window.location.href = "quiz.html";
         });
     </script>
 </body>
