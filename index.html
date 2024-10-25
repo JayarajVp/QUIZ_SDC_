@@ -1,115 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Firebase Quiz Form</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: #f7f7f7;
-        }
-        .box {
-            width: 400px;
-            padding: 40px;
-            background: white;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            text-align: center;
-        }
-        h2 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-        .form {
-            position: relative;
-        }
-        .inputbox {
-            position: relative;
-            margin-bottom: 30px;
-        }
-        .inputbox input {
-            width: 100%;
-            padding: 10px;
-            background: #f7f7f7;
-            border: none;
-            border-bottom: 2px solid #333;
-            outline: none;
-            color: #333;
-            font-size: 16px;
-        }
-        .inputbox span {
-            position: absolute;
-            left: 0;
-            padding: 10px 0;
-            pointer-events: none;
-            font-size: 16px;
-            color: #666;
-            transition: 0.5s;
-        }
-        .inputbox input:focus ~ span,
-        .inputbox input:valid ~ span {
-            transform: translateY(-20px);
-            font-size: 12px;
-            color: #333;
-        }
-        .sub {
-            width: 100%;
-            padding: 10px;
-            background: #333;
-            border: none;
-            color: white;
-            cursor: pointer;
-            font-size: 18px;
-            transition: background 0.3s;
-        }
-        .sub:hover {
-            background: #555;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Login</title>
+  <style>
+    body {
+      background-image: url('background.jpg');
+      background-size: cover;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    form {
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+      text-align: center;
+    }
+    input {
+      display: block;
+      margin: 10px auto;
+      padding: 10px;
+      width: 80%;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
-    <div class="box">
-        <div class="form">
-            <h2>SDC Quiz</h2>
-            <form id="quizForm">
-                <div class="inputbox">
-                    <input type="text" id="username" required>
-                    <span>Username</span>
-                </div>
-                <div class="inputbox">
-                    <input type="text" id="section" required>
-                    <span>Section</span>
-                </div>
-                <div class="inputbox">
-                    <input type="text" id="semester" required>
-                    <span>Semester</span>
-                </div>
-                <input type="submit" value="Start Quiz" class="sub" id="submit">
-            </form>
-        </div>
-    </div>
+  <form id="loginForm">
+    <h2>Enter Your Details</h2>
+    <input type="text" id="username" placeholder="Username" required />
+    <input type="text" id="class" placeholder="Class" required />
+    <input type="text" id="section" placeholder="Section" required />
+    <button type="submit">Start Quiz</button>
+  </form>
 
-    <script>
-        document.getElementById("quizForm").addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent page reload
-
-            const username = document.getElementById("username").value;
-            const section = document.getElementById("section").value;
-            const semester = document.getElementById("semester").value;
-
-            // Store user data in sessionStorage and redirect to quiz.html
-            sessionStorage.setItem('username', username);
-            sessionStorage.setItem('section', section);
-            sessionStorage.setItem('semester', semester);
-
-            // Redirect to quiz.html
-            window.location.href = "quiz.html";
-        });
-    </script>
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const classVal = document.getElementById('class').value;
+      const section = document.getElementById('section').value;
+      // Redirect to quiz.html with data
+      window.location.href = `quiz.html?username=${username}&class=${classVal}&section=${section}`;
+    });
+  </script>
 </body>
 </html>
