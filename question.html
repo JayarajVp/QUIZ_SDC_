@@ -5,51 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Question Input</title>
     <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #f7f7f7;
-        }
-        .box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
-        }
-        .form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .inputbox {
-            margin-bottom: 15px;
-            width: 100%;
-        }
-        .inputbox input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .inputbox span {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .sub {
-            background: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .sub:hover {
-            background: #218838;
-        }
+        /* Add your styles */
     </style>
 </head>
 <body>
@@ -78,7 +34,7 @@
                     <span>Option 4</span>
                 </div>
                 <div class="inputbox">
-                    <input type="number" id="correctOption" min="1" max="4" required>
+                    <input type="text" id="correctOption" required>
                     <span>Correct Option (1-4)</span>
                 </div>
                 <input type="submit" value="Submit Question" class="sub" id="submit">
@@ -87,60 +43,54 @@
     </div>
 
     <script type="module">
-        // Import Firebase SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
         import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-analytics.js";
 
-        // Firebase configuration (Your credentials)
         const firebaseConfig = {
-            apiKey: "AIzaSyCXUOurYSr1T7hgio8L2JF_-3Odg8vutUg",
-            authDomain: "quiz-fb5d9.firebaseapp.com",
-            projectId: "quiz-fb5d9",
-            storageBucket: "quiz-fb5d9.appspot.com",
-            messagingSenderId: "916039221761",
-            appId: "1:916039221761:web:df2104737062375b3ff600",
-            measurementId: "G-BPTGDJXS8K"
+            apiKey: "your-api-key",
+            authDomain: "your-auth-domain",
+            projectId: "your-project-id",
+            storageBucket: "your-storage-bucket",
+            messagingSenderId: "your-sender-id",
+            appId: "your-app-id"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
         const db = getDatabase(app);
 
-        // Event listener for form submission
         document.getElementById("questionForm").addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent page reload
+            e.preventDefault();
 
-            // Get input values
             const question = document.getElementById("question").value;
-            const options = {
-                option1: document.getElementById("option1").value,
-                option2: document.getElementById("option2").value,
-                option3: document.getElementById("option3").value,
-                option4: document.getElementById("option4").value
-            };
+            const option1 = document.getElementById("option1").value;
+            const option2 = document.getElementById("option2").value;
+            const option3 = document.getElementById("option3").value;
+            const option4 = document.getElementById("option4").value;
             const correctOption = document.getElementById("correctOption").value;
 
-            // Prepare data object
+            // Construct the data in the required structure
             const questionData = {
                 question: question,
-                options: options,
+                options: {
+                    option1: option1,
+                    option2: option2,
+                    option3: option3,
+                    option4: option4
+                },
                 correctOption: correctOption
             };
 
-            console.log("Submitting Question Data:", questionData); // Log data to ensure correctness
+            // Create a key by replacing spaces with underscores
+            const questionKey = question.replace(/\s+/g, '_');
 
-            // Save data using set() to overwrite completely
-            set(ref(db, 'questions/' + question.replace(/\s+/g, '_')), questionData)
+            // Save the question data under the key
+            set(ref(db, 'questions/' + questionKey), questionData)
                 .then(() => {
-                    console.log("Question saved successfully:", questionData); // Confirm success
-                    alert("Question Submission Successful!");
-                    // Reset form after submission
+                    alert("Question Submitted Successfully!");
                     document.getElementById("questionForm").reset();
                 })
                 .catch((error) => {
-                    console.error("Error saving question data:", error); // Log errors
+                    console.error("Error submitting question:", error);
                 });
         });
     </script>
