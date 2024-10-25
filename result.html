@@ -103,9 +103,7 @@
                     }
 
                     // If scores are the same, compare the total time
-                    const timeA = parseTime(a.totalTime);
-                    const timeB = parseTime(b.totalTime);
-                    return timeA - timeB; // Ascending order (less time first)
+                    return parseTime(a.totalTime) - parseTime(b.totalTime); // Ascending order (less time first)
                 });
 
                 displayResults(results);
@@ -114,9 +112,15 @@
             }
         }
 
-        // Helper function to parse time in 'mm:ss:ms' format to total milliseconds
+        // Helper function to parse time in '0m 9s 819ms' format to total milliseconds
         function parseTime(timeString) {
-            const [minutes, seconds, milliseconds] = timeString.split(':').map(Number);
+            const timeParts = timeString.match(/(\d+)m (\d+)s (\d+)ms/);
+            if (!timeParts) return 0; // If parsing fails, return 0
+
+            const minutes = parseInt(timeParts[1], 10) || 0;
+            const seconds = parseInt(timeParts[2], 10) || 0;
+            const milliseconds = parseInt(timeParts[3], 10) || 0;
+
             return (minutes * 60 * 1000) + (seconds * 1000) + milliseconds;
         }
 
