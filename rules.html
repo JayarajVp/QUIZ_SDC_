@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rules</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        p {
+            max-width: 600px;
+            margin: 10px 0;
+            line-height: 1.5;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Please read the instructions</h1>
+
+    <p>• After clicking "Start," the quiz will begin, and you will have 20 seconds to answer each question.</p>
+    <p>• The timer starts as soon as you click the "Start" button.</p>
+    <p>• After answering all the questions, your score and total time taken will be displayed.</p>
+    <p>• Once you submit an answer, please do not press back, as this may cause an error. Changing answers after submission will not be considered.</p>
+    <p>• After completing the quiz, please close the tab.</p>
+
+    <button onclick="redirectToLogin()">Start</button>
+
+    <script>
+        function redirectToLogin() {
+            window.location.href = 'login.html';
+        }
+    </script>
+
+</body>
+</html>
