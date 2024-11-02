@@ -12,7 +12,29 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: #f0f0f0;
+            background: url('images/Sdc.jpeg') center center / cover no-repeat;
+            background-size: cover;
+            position: relative;
+        }
+
+        /* Overlay to control the blur effect */
+        .background-blur {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            filter: blur(0px);
+            transition: filter 0.3s ease;
+            z-index: -1;
+        }
+
+        /* Logo and button container */
+        .content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
         }
 
         img {
@@ -39,11 +61,23 @@
 </head>
 <body>
 
-    <!-- Logo Image -->
-    <img src="images/logo.jpeg" alt="Logo">
+    <!-- Background Blur Overlay -->
+    <div class="background-blur" id="background-blur"></div>
 
-    <!-- Login Button -->
-    <button onclick="location.href='login.html'">Login</button>
+    <div class="content">
+        <!-- Logo Image -->
+        <img src="images/logo.jpeg" alt="Logo">
 
+        <!-- Login Button -->
+        <button onclick="applyBlur()">Login</button>
+    </div>
+
+    <script>
+        function applyBlur() {
+            document.getElementById('background-blur').style.filter = 'blur(8px)';
+            location.href = 'login.html';
+        }
+    </script>
+    
 </body>
 </html>
