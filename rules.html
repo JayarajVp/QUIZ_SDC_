@@ -11,11 +11,31 @@
             align-items: center;
             background: url('images/Sdc.jpeg') center center / cover no-repeat;
             font-family: Arial, sans-serif;
+            position: relative; /* Needed for absolute positioning of the overlay */
+            overflow: hidden; /* Prevents overflow due to blur effect */
+        }
+
+        .background-blur {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            filter: blur(8px); /* Adjust blur amount as needed */
+            z-index: 0; /* Place behind other content */
+        }
+
+        .content {
+            position: relative;
+            z-index: 1; /* Place above the blur */
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8); /* White text with 80% opacity */
         }
 
         h1 {
-            text-align: center;
             font-weight: bold;
+            margin-top: 20px; /* Space from the top */
         }
 
         p {
@@ -42,15 +62,17 @@
 </head>
 <body>
 
-    <h1>Please read the instructions</h1>
+    <div class="background-blur"></div> <!-- Background Blur Overlay -->
 
-    <p>• After clicking "Start," the quiz will begin, and you will have 20 seconds to answer each question.</p>
-    <p>• The timer starts as soon as you click the "Start" button.</p>
-    <p>• After answering all the questions, your score and total time taken will be displayed.</p>
-    <p>• Once you submit an answer, please do not press back, as this may cause an error. Changing answers after submission will not be considered.</p>
-    <p>• After completing the quiz, please close the tab.</p>
-
-    <button onclick="redirectToLogin()">Start</button>
+    <div class="content">
+        <h1>Please read the instructions</h1>
+        <p>• After clicking "Start," the quiz will begin, and you will have 20 seconds to answer each question.</p>
+        <p>• The timer starts as soon as you click the "Start" button.</p>
+        <p>• After answering all the questions, your score and total time taken will be displayed.</p>
+        <p>• Once you submit an answer, please do not press back, as this may cause an error. Changing answers after submission will not be considered.</p>
+        <p>• After completing the quiz, please close the tab.</p>
+        <button onclick="redirectToLogin()">Start</button>
+    </div>
 
     <script>
         function redirectToLogin() {
