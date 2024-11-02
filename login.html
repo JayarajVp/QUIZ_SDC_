@@ -6,27 +6,41 @@
   <title>Quiz Login</title>
   <style>
     body {
-      background-image: url('background.jpg');
-      background-size: cover;
-      height: 100vh;
       margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: Arial, sans-serif;
+      position: relative; /* Required for positioning the blur */
+      overflow: hidden; /* Prevent overflow from the blurred image */
     }
+
+    .background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: url('images/Sdc.jpeg'); /* Set your background image path */
+      background-size: cover;
+      filter: blur(8px); /* Apply blur effect */
+      z-index: 0; /* Place behind the form */
+    }
+
     form {
-      background-color: rgba(255, 255, 255, 0.8);
+      background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent white */
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
       text-align: center;
+      position: relative; /* Ensure form is above the blurred background */
+      z-index: 1; /* Place above the blur */
     }
+
     input {
       display: block;
       margin: 10px auto;
       padding: 10px;
       width: 80%;
     }
+
     button {
       margin-top: 10px;
       padding: 10px 20px;
@@ -35,6 +49,9 @@
   </style>
 </head>
 <body>
+
+  <div class="background"></div> <!-- Background Image with Blur -->
+
   <form id="loginForm">
     <h2>Enter Your Details</h2>
     <input type="text" id="username" placeholder="Username" required />
