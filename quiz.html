@@ -9,12 +9,28 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin: 0;
-      background-color: #f4f4f9;
+      position: relative; /* Ensure proper positioning for absolute elements */
     }
+    
+    /* Blurred Background */
+    .background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('images/sdc2.jpeg') center center / cover no-repeat;
+      filter: blur(8px); /* Blur effect */
+      z-index: 0; /* Behind content */
+    }
+    
     h1 {
       margin-bottom: 20px;
       color: #333;
+      z-index: 1; /* In front of background */
+      position: relative; /* Position for stacking */
     }
+    
     button {
       margin: 10px;
       padding: 10px 20px;
@@ -24,16 +40,23 @@
       border: none;
       border-radius: 5px;
       transition: background-color 0.3s ease;
+      z-index: 1; /* In front of background */
+      position: relative; /* Position for stacking */
     }
+    
     button:hover {
       background-color: #218838; /* Darker green on hover */
     }
+    
     #timer {
       font-weight: bold;
       color: #dc3545; /* Red color */
       margin-bottom: 15px;
       font-size: 1.2em; /* Larger font */
+      z-index: 1; /* In front of background */
+      position: relative; /* Position for stacking */
     }
+    
     #questionContainer {
       display: flex;
       flex-direction: column;
@@ -46,7 +69,10 @@
       box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Shadow effect */
       width: 80%;
       max-width: 600px; /* Max width */
+      position: relative; /* Position for stacking */
+      z-index: 1; /* In front of background */
     }
+    
     .option {
       display: block;
       margin: 10px 0;
@@ -56,9 +82,11 @@
       padding: 10px;
       transition: background-color 0.3s ease; /* Transition effect */
     }
+    
     .option:hover {
       background-color: #e2e6ea; /* Darker gray on hover */
     }
+    
     #resultContainer {
       display: none; /* Hidden by default */
       margin-top: 30px;
@@ -69,10 +97,14 @@
       width: 80%;
       max-width: 600px; /* Max width */
       margin: 30px auto; /* Center the result container */
+      position: relative; /* Position for stacking */
+      z-index: 1; /* In front of background */
     }
+    
     #resultContainer h2 {
       color: #333; /* Darker text color */
     }
+    
     #finalScore, #finalTime {
       font-size: 1.2em; /* Larger font size */
       color: #495057; /* Dark gray */
@@ -80,6 +112,8 @@
   </style>
 </head>
 <body>
+  <div class="background"></div> <!-- Blurred Background Image -->
+
   <h1>Quiz Time!</h1>
   <div id="timer">Time Left: 40s</div>
   <div id="questionContainer"></div>
