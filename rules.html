@@ -6,23 +6,20 @@
     <title>Rules</title>
     <style>
         body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: url('images/Sdc.jpeg') center center / cover no-repeat;
+            margin: 0;
             font-family: Arial, sans-serif;
-            position: relative; /* Needed for absolute positioning of the overlay */
+            position: relative;
             overflow: hidden; /* Prevents overflow due to blur effect */
         }
 
-        .background-blur {
-            position: absolute;
+        .background {
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: inherit;
-            filter: blur(8px); /* Adjust blur amount as needed */
+            background: url('images/Sdc.jpeg') center center / cover no-repeat;
+            filter: blur(8px); /* Full blur effect on the background image */
             z-index: 0; /* Place behind other content */
         }
 
@@ -62,7 +59,7 @@
 </head>
 <body>
 
-    <div class="background-blur"></div> <!-- Background Blur Overlay -->
+    <div class="background"></div> <!-- Background Image with Blur -->
 
     <div class="content">
         <h1>Please read the instructions</h1>
