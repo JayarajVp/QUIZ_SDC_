@@ -164,7 +164,7 @@
         questions = Object.values(snapshot.val()).sort(() => Math.random() - 0.5);
         quizStartTime = performance.now();
         showQuestion();
-        startQuestionTimer(40);
+        startQuestionTimer(20);
       }
     });
 
@@ -217,7 +217,7 @@
       currentQuestionIndex++;
       if (currentQuestionIndex < questions.length) {
         showQuestion();
-        startQuestionTimer(40);
+        startQuestionTimer(20);
       } else {
         endQuiz();
       }
